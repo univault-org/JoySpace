@@ -1,8 +1,8 @@
 ---
 title: Bagle
-url: https://bagle.com
-description: Your personal and loyal AI companion
-date: 2024-10-28T19:46:13.781Z
+url: https://bagle.com/
+description: 
+date: 2024-10-28T06:00:00.000Z
 tags: []
 type: bookmark
 site_name: bagle.com
@@ -10,32 +10,18 @@ favicon: https://www.google.com/s2/favicons?domain=https://bagle.com&sz=128
 image: https://bagle.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fbagle-logo.1408c860.png&w=256&q=75
 ---
 
-Notes: My bagle.com site
+Notes: bagle
 
 ---
-title: Tennis Live Scores News Videos Player Rankings | Tennis.com
-url: https://tennis.com
-description: Tennis Live Scores News Videos Player Rankings
-date: 2024-10-28T19:46:56.136Z
-tags: []
-type: bookmark
-site_name: Tennis.com
-favicon: https://www.google.com/s2/favicons?domain=https://tennis.com&sz=128
-image: https://images.tennis.com/image/upload/v1622485654/tenniscom-prd/assets/Fallback/TENNIS_PROMO_GREEN_TENNIScom.jpg
----
-
-Notes: tennis.com site
-
----
-title: e-Bequest.com
-url: https://ebequest.com
+title: Univault.org - The Universal & Personal Data Vault
+url: https://univault.org/
 description: 
-date: 2024-10-28T19:48:44.931Z
+date: 2024-10-28T06:00:00.000Z
 tags: []
 type: bookmark
-site_name: ebequest.com
-favicon: https://www.google.com/s2/favicons?domain=https://ebequest.com&sz=128
-image: https://ebequest.com/assets/ebequest-vault-logo.884efe78.png
+site_name: univault.org
+favicon: https://www.google.com/s2/favicons?domain=https://univault.org&sz=128
+
 ---
 
-Notes: eBequest site.
+Notes: univault site here after edit

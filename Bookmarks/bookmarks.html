@@ -204,6 +204,32 @@
         box-shadow: 0 8px 24px rgba(132, 204, 22, 0.12);
       }
 
+      .bookmark-actions {
+        margin-left: auto;
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .bookmark-action-btn {
+        background: transparent;
+        border: none;
+        padding: 0.5rem;
+        border-radius: 0.375rem;
+        color: var(--neutral-500);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .bookmark-action-btn:hover {
+        background-color: var(--primary-50);
+        color: var(--primary-600);
+      }
+
+      .bookmark-action-btn[data-selected="true"] {
+        background-color: var(--primary-100);
+        color: var(--primary-700);
+      }
+
       .bookmark-image-container {
         position: relative;
         width: 100%;
@@ -394,6 +420,59 @@
         border-radius: 0.5rem;
         width: 90%;
         max-width: 500px;
+      }
+
+      .share-options {
+        background-color: var(--primary-50);
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .share-option {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        transition: background-color 0.2s ease;
+      }
+
+      .share-option:hover {
+        background-color: var(--primary-100);
+      }
+
+      .share-option input[type="checkbox"] {
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 0.375rem;
+        border: 2px solid var(--primary-400);
+        cursor: pointer;
+      }
+
+      .share-option-label {
+        flex: 1;
+      }
+
+      .share-option-title {
+        font-weight: 500;
+        color: var(--neutral-800);
+        margin-bottom: 0.25rem;
+      }
+
+      .share-option-description {
+        font-size: 0.875rem;
+        color: var(--neutral-600);
+      }
+
+      .selected-count {
+        background-color: var(--primary-100);
+        color: var(--primary-700);
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 1rem;
       }
 
       .editor-header {
@@ -914,17 +993,46 @@
     </div>
     <div id="shareModal" class="modal">
       <div class="modal-content">
-        <h2>Share Bookmarks</h2>
-        <div id="fileList"></div>
-        <button id="getHtmlFileBtn" class="modal-button secondary">
-          Select bookmarks.html
-        </button>
-        <div id="zipControls">
-          <button id="generateZip" class="modal-button primary" disabled>
-            Generate ZIP
+        <div class="modal-header">
+          <h2>Share Bookmarks</h2>
+          <button class="close-button" id="closeShareModalBtn">
+            <i class="bi bi-x-lg"></i>
           </button>
         </div>
-        <div id="successMessage"></div>
+
+        <div class="selected-count">
+          <span id="selectedBookmarksCount">0</span> bookmarks selected
+        </div>
+
+        <div class="share-options">
+          <label class="share-option">
+            <input type="checkbox" id="includeNotesCheckbox" />
+            <div class="share-option-label">
+              <div class="share-option-title">Include Personal Notes</div>
+              <div class="share-option-description">
+                Your private notes will be included in the shared markdown file
+              </div>
+            </div>
+          </label>
+        </div>
+
+        <div class="share-preview">
+          <h3>Selected Bookmarks</h3>
+          <div id="selectedBookmarksList" class="selected-bookmarks-list">
+            <!-- Selected bookmarks will be listed here -->
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button
+            id="generateShareableMarkdown"
+            class="primary-button"
+            disabled
+          >
+            <i class="bi bi-file-earmark-text"></i>
+            Generate Shareable Markdown
+          </button>
+        </div>
       </div>
     </div>
 
@@ -944,9 +1052,12 @@
     </div>
     <script>
       // Core variables
-      let bookmarks = [];
       let isMarkdownMode = false;
       const MARKDOWN_EXISTS_KEY = "isBookmarkMarkdownExists";
+
+      if (!window.bookmarks) {
+        window.bookmarks = [];
+      }
 
       document
         .getElementById("loadMarkdownBtn")
@@ -961,14 +1072,18 @@
             if (file) {
               try {
                 const content = await file.text();
-                // Parse the markdown and store in global bookmarks array
-                window.bookmarks = parseMarkdown(content);
+                console.log("Loading markdown content:", content); // Debug log
 
-                // Render the bookmarks
+                // Parse the markdown and APPEND to global bookmarks array
+                const loadedBookmarks = parseMarkdown(content);
+                console.log("Parsed bookmarks from file:", loadedBookmarks); // Debug log
+
+                // Append to existing bookmarks instead of replacing
+                window.bookmarks = [...window.bookmarks, ...loadedBookmarks];
+                console.log("Updated global bookmarks:", window.bookmarks); // Debug log
+
+                // Render all bookmarks
                 renderBookmarks(window.bookmarks);
-
-                console.log("Loaded bookmarks:", window.bookmarks); // Debug log
-                alert("Markdown file loaded successfully!");
               } catch (error) {
                 console.error("Error loading markdown file:", error);
                 alert("Error loading markdown file. Please try again.");
@@ -1025,48 +1140,60 @@
           .addEventListener("click", handleBookmarkSubmit);
 
         // Update the handleBookmarkSubmit function
+
         function handleBookmarkSubmit() {
           const metadataText =
             document.getElementById("bookmarkMetadata").value;
           const userNotes = document.getElementById("bookmarkNotes").value;
 
-          // Parse metadata
-          const metadata = parseMetadata(metadataText);
-          if (!metadata) {
-            alert("Invalid metadata format. Please check the copied content.");
-            return;
+          try {
+            // Parse metadata
+            const metadata = parseMetadata(metadataText);
+            if (!metadata) {
+              alert(
+                "Invalid metadata format. Please check the copied content."
+              );
+              return;
+            }
+
+            // Create bookmark object
+            const newBookmark = {
+              title: metadata.title,
+              url: metadata.url,
+              description: metadata.description || "",
+              notes: userNotes || "",
+              date: metadata.date || new Date().toISOString(),
+              tags: metadata.tags || [],
+              site_name: metadata.site_name,
+              favicon: metadata.favicon,
+              image: metadata.image,
+            };
+
+            // Add to global bookmarks array
+            window.bookmarks.push(newBookmark);
+
+            console.log("Current bookmarks:", window.bookmarks); // Debug log
+
+            // Update display with all bookmarks
+            renderBookmarks(window.bookmarks);
+
+            // Clear the form
+            document.getElementById("bookmarkMetadata").value = "";
+            document.getElementById("bookmarkNotes").value = "";
+
+            // Close modal
+            document.getElementById("addBookmarkModal").style.display = "none";
+
+            // Show success message
+            const successMessage = document.createElement("div");
+            successMessage.className = "success-message";
+            successMessage.textContent = "Bookmark added successfully!";
+            document.body.appendChild(successMessage);
+            setTimeout(() => successMessage.remove(), 3000);
+          } catch (error) {
+            console.error("Error adding bookmark:", error);
+            alert("Error adding bookmark. Please try again.");
           }
-
-          // Create bookmark object
-          const newBookmark = {
-            title: metadata.title,
-            url: metadata.url,
-            description: metadata.description || "",
-            notes: userNotes || "",
-            date: metadata.date || new Date().toISOString(),
-            tags: metadata.tags || [],
-            site_name: metadata.site_name,
-            favicon: metadata.favicon,
-            image: metadata.image,
-          };
-
-          console.log("New bookmark being added:", newBookmark); // Debug log
-
-          // Add to bookmarks array
-          bookmarks.push(newBookmark);
-
-          // Update display
-          renderBookmarks(bookmarks);
-
-          // Generate and save markdown
-          const markdownContent = generateMarkdownContent(bookmarks);
-          downloadMarkdownFile(markdownContent, "bookmarks.md");
-
-          // Close modal
-          document.getElementById("addBookmarkModal").style.display = "none";
-
-          // Show success message
-          alert("Bookmark added successfully!");
         }
 
         // Update line numbers when the editor is opened
@@ -1172,11 +1299,11 @@
         });
 
         // Add Bookmark button click handler
-        const addButton = document.querySelector(".add-button");
-        addButton.addEventListener("click", function () {
-          showAddBookmarkForm();
-          openBookmarkAssistant();
-        });
+        // const addButton = document.querySelector(".add-button");
+        // addButton.addEventListener("click", function () {
+        //   showAddBookmarkForm();
+        //   openBookmarkAssistant();
+        // });
 
         // Close button handler
         document
@@ -1197,42 +1324,58 @@
       // Function to parse markdown content
       function parseMarkdown(content) {
         const bookmarks = [];
-        const bookmarkBlocks = content
+        // Split by triple dashes and filter out empty sections
+        const sections = content
           .split("---")
-          .filter((block) => block.trim());
+          .filter((section) => section.trim());
 
-        bookmarkBlocks.forEach((block) => {
-          const lines = block.trim().split("\n");
+        // Process sections in pairs (metadata section followed by notes section)
+        for (let i = 0; i < sections.length; i += 2) {
+          const metadataSection = sections[i];
+          const notesSection = sections[i + 1];
+
+          if (!metadataSection) continue;
+
+          // Parse metadata
           const metadata = {};
-          let isMetadata = true;
-          let notes = "";
+          const metadataLines = metadataSection.split("\n");
 
-          lines.forEach((line) => {
-            line = line.trim();
-            if (!line) return;
+          metadataLines.forEach((line) => {
+            const trimmedLine = line.trim();
+            if (!trimmedLine) return;
 
-            if (isMetadata) {
-              const [key, ...valueParts] = line.split(":");
-              if (key && valueParts.length) {
-                const value = valueParts.join(":").trim();
-                if (key === "tags") {
-                  try {
-                    metadata[key.trim()] = JSON.parse(value);
-                  } catch {
-                    metadata[key.trim()] = [];
-                  }
-                } else {
-                  metadata[key.trim()] = value;
+            const [key, ...valueParts] = trimmedLine.split(":");
+            if (key && valueParts.length) {
+              const value = valueParts.join(":").trim();
+              if (key === "tags") {
+                try {
+                  metadata[key.trim()] = JSON.parse(value);
+                } catch {
+                  metadata[key.trim()] = [];
                 }
+              } else {
+                metadata[key.trim()] = value;
               }
-            } else if (line.startsWith("Notes:")) {
-              notes = line.substring(6).trim();
             }
+          });
 
-            // Check if we've reached the end of metadata
-            if (line.startsWith("Notes:")) {
-              isMetadata = false;
+          // Parse notes
+          let notes = "";
+          if (notesSection) {
+            const notesLines = notesSection.split("\n");
+            const notesLine = notesLines.find((line) =>
+              line.trim().toLowerCase().startsWith("notes:")
+            );
+            if (notesLine) {
+              notes = notesLine.substring(notesLine.indexOf(":") + 1).trim();
             }
+          }
+
+          console.log("Parsed section:", {
+            metadata,
+            notes,
+            metadataRaw: metadataSection,
+            notesRaw: notesSection,
           });
 
           if (metadata.title && metadata.url) {
@@ -1248,8 +1391,9 @@
               image: metadata.image,
             });
           }
-        });
+        }
 
+        console.log("Final parsed bookmarks:", bookmarks);
         return bookmarks;
       }
 
@@ -1262,6 +1406,15 @@
           );
           const notesElement = card.querySelector(".bookmark-notes");
           const tagElements = card.querySelectorAll(".tag");
+          const imageElement = card.querySelector(".bookmark-image");
+          const faviconElement = card.querySelector(".bookmark-favicon");
+          const siteNameElement = card.querySelector(".bookmark-site-name");
+          const dateElement = card.querySelector(".bookmark-date");
+
+          // Get notes text without the icon prefix
+          const notesText = notesElement
+            ? notesElement.textContent.replace(/^\s*\u{1F4DD}\s*/u, "").trim()
+            : "";
 
           return {
             title: titleElement.textContent.trim(),
@@ -1269,11 +1422,21 @@
             description: descriptionElement
               ? descriptionElement.textContent.trim()
               : "",
-            notes: notesElement ? notesElement.textContent.trim() : "",
-            date: new Date().toISOString().split("T")[0], // Current date if not specified
+            notes: notesText,
+            date: dateElement
+              ? new Date(dateElement.textContent.trim()).toISOString()
+              : new Date().toISOString(),
             tags: Array.from(tagElements).map((tag) =>
-              tag.textContent.replace("#", "").trim()
+              tag.textContent.replace(/[#\uFE0E\uFE0F]/, "").trim()
             ),
+            site_name: siteNameElement
+              ? siteNameElement.textContent.trim()
+              : "",
+            favicon: faviconElement
+              ? faviconElement.src
+              : `https://www.google.com/s2/favicons?domain=${titleElement.href}&sz=128`,
+            image: imageElement ? imageElement.src : "",
+            type: "bookmark",
           };
         });
       }
@@ -1297,33 +1460,54 @@
       // Function to render bookmarks to the UI
       function renderBookmarks(bookmarksToRender) {
         const container = document.querySelector(".bookmark-list");
+        if (!container) return;
+
         container.innerHTML = "";
+
+        if (!bookmarksToRender || bookmarksToRender.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+                <i class="bi bi-bookmark-plus"></i>
+                <p>No bookmarks yet. Add your first bookmark!</p>
+            </div>
+        `;
+          return;
+        }
 
         bookmarksToRender.forEach((bookmark) => {
           const bookmarkElement = document.createElement("div");
           bookmarkElement.className = "bookmark-card";
 
           bookmarkElement.innerHTML = `
-            ${
-              bookmark.image
-                ? `
+              ${
+                bookmark.image
+                  ? `
                 <div class="bookmark-image-container">
-                    <img src="${bookmark.image}" alt="" class="bookmark-image" onerror="this.style.display='none'">
+                    <img 
+                        src="${bookmark.image}" 
+                        alt="${bookmark.title}" 
+                        class="bookmark-image"
+                        onerror="this.style.display='none'"
+                    >
                 </div>
             `
-                : ""
-            }
+                  : ""
+              }
             <div class="bookmark-content">
                 <div class="bookmark-header">
-                    ${
-                      bookmark.favicon
-                        ? `
-                        <img src="${bookmark.favicon}" alt="" class="bookmark-favicon" onerror="this.src='https://www.google.com/s2/favicons?domain=${bookmark.url}'">
-                    `
-                        : `
-                        <img src="https://www.google.com/s2/favicons?domain=${bookmark.url}" alt="" class="bookmark-favicon">
-                    `
-                    }
+                    <div class="bookmark-favicon-wrapper">
+                        <img 
+                            src="${
+                              bookmark.favicon ||
+                              `https://www.google.com/s2/favicons?domain=${bookmark.url}&sz=128`
+                            }" 
+                            alt="" 
+                            class="bookmark-favicon"
+                            onerror="this.src='https://www.google.com/s2/favicons?domain=${
+                              bookmark.url
+                            }&sz=128'"
+                        >
+                    </div>
                     <div class="bookmark-title-container">
                         <a href="${
                           bookmark.url
@@ -1333,45 +1517,70 @@
                         ${
                           bookmark.site_name
                             ? `
-                            <div class="bookmark-site-name">${bookmark.site_name}</div>
+                            <div class="bookmark-site-name">
+                                <i class="bi bi-globe2"></i>
+                                ${bookmark.site_name}
+                            </div>
                         `
                             : ""
                         }
                     </div>
+                    <div class="bookmark-actions">
+                        <button class="bookmark-action-btn share-toggle" data-selected="false">
+                            <i class="bi bi-share"></i>
+                        </button>
+                    </div>
                 </div>
-                
+
                 ${
                   bookmark.description
                     ? `
-                    <div class="bookmark-metadata">${bookmark.description}</div>
-                `
-                    : ""
-                }
-                
-                ${
-                  bookmark.notes
-                    ? `
-                    <div class="bookmark-notes">${bookmark.notes}</div>
-                `
-                    : ""
-                }
-                
-                ${
-                  bookmark.tags && bookmark.tags.length > 0
-                    ? `
-                    <div class="tag-list">
-                        ${bookmark.tags
-                          .map((tag) => `<span class="tag">#${tag}</span>`)
-                          .join("")}
+                    <div class="bookmark-metadata">
+                        <i class="bi bi-info-circle"></i>
+                        ${bookmark.description}
                     </div>
                 `
                     : ""
                 }
-                
-                <div class="bookmark-date">
-                    Bookmarked on ${new Date(
-                      bookmark.date
-                    ).toLocaleDateString()}
+
+                ${
+                  bookmark.notes
+                    ? `
+                    <div class="bookmark-notes">
+                        <i class="bi bi-pencil"></i>
+                        ${bookmark.notes}
+                    </div>
+                `
+                    : ""
+                }
+
+                <div class="bookmark-footer">
+                    ${
+                      bookmark.tags && bookmark.tags.length > 0
+                        ? `
+                        <div class="tag-list">
+                            ${bookmark.tags
+                              .map(
+                                (tag) => `
+                                <span class="tag">
+                                    <i class="bi bi-hash"></i>${tag}
+                                </span>
+                            `
+                              )
+                              .join("")}
+                        </div>
+                    `
+                        : ""
+                    }
+                    
+                    <div class="bookmark-date">
+                        <i class="bi bi-calendar3"></i>
+                        ${new Date(bookmark.date).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                    </div>
                 </div>
             </div>
         `;
@@ -1467,46 +1676,52 @@
         const metadataText = document.getElementById("bookmarkMetadata").value;
         const userNotes = document.getElementById("bookmarkNotes").value;
 
-        // Parse metadata
-        const metadata = parseMetadata(metadataText);
-        if (!metadata) {
-          alert("Invalid metadata format. Please check the copied content.");
-          return;
+        try {
+          // Parse metadata
+          const metadata = parseMetadata(metadataText);
+          if (!metadata) {
+            alert("Invalid metadata format. Please check the copied content.");
+            return;
+          }
+
+          // Create bookmark object
+          const newBookmark = {
+            title: metadata.title,
+            url: metadata.url,
+            description: metadata.description || "",
+            notes: userNotes || "",
+            date: metadata.date || new Date().toISOString(),
+            tags: metadata.tags || [],
+            site_name: metadata.site_name,
+            favicon: metadata.favicon,
+            image: metadata.image,
+          };
+
+          // Add to existing bookmarks array
+          window.bookmarks.push(newBookmark);
+
+          console.log("Current bookmarks:", window.bookmarks); // Debug log
+
+          // Update display with all bookmarks
+          renderBookmarks(window.bookmarks);
+
+          // Clear the form
+          document.getElementById("bookmarkMetadata").value = "";
+          document.getElementById("bookmarkNotes").value = "";
+
+          // Close modal
+          document.getElementById("addBookmarkModal").style.display = "none";
+
+          // Show success message
+          const successMessage = document.createElement("div");
+          successMessage.className = "success-message";
+          successMessage.textContent = "Bookmark added successfully!";
+          document.body.appendChild(successMessage);
+          setTimeout(() => successMessage.remove(), 3000);
+        } catch (error) {
+          console.error("Error adding bookmark:", error);
+          alert("Error adding bookmark. Please try again.");
         }
-
-        // Create bookmark object
-        const newBookmark = {
-          title: metadata.title,
-          url: metadata.url,
-          description: metadata.description || "",
-          notes: userNotes || "",
-          date: metadata.date || new Date().toISOString(),
-          tags: metadata.tags || [],
-          site_name: metadata.site_name,
-          favicon: metadata.favicon,
-          image: metadata.image,
-        };
-
-        // Get existing bookmarks or initialize empty array
-        if (!window.bookmarks) {
-          window.bookmarks = [];
-        }
-
-        // Add to bookmarks array
-        window.bookmarks.push(newBookmark);
-
-        // Update display with all bookmarks
-        renderBookmarks(window.bookmarks);
-
-        // Generate and save markdown with all bookmarks
-        const markdownContent = generateMarkdownContent(window.bookmarks);
-        downloadMarkdownFile(markdownContent, "bookmarks.md");
-
-        // Close modal
-        document.getElementById("addBookmarkModal").style.display = "none";
-
-        // Show success message
-        alert("Bookmark added successfully!");
       }
 
       // Update the generateMarkdownContent function to include all metadata
