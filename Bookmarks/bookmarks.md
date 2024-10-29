@@ -1,27 +1,27 @@
 ---
-title: Bagle
-url: https://bagle.com/
-description: 
-date: 2024-10-28T06:00:00.000Z
+title: Tennis Live Scores News Videos Player Rankings | Tennis.com
+url: https://tennis.com
+description: Tennis Live Scores News Videos Player Rankings
+date: 2024-10-29T22:21:56.363Z
 tags: []
 type: bookmark
-site_name: bagle.com
-favicon: https://www.google.com/s2/favicons?domain=https://bagle.com&sz=128
-image: https://bagle.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fbagle-logo.1408c860.png&w=256&q=75
+site_name: Tennis.com
+favicon: https://www.google.com/s2/favicons?domain=https://tennis.com&sz=128
+image: https://images.tennis.com/image/upload/v1622485654/tenniscom-prd/assets/Fallback/TENNIS_PROMO_GREEN_TENNIScom.jpg
 ---
 
-Notes: bagle
+This is tennis.com my fav site
 
 ---
-title: Univault.org - The Universal & Personal Data Vault
-url: https://univault.org/
-description: 
-date: 2024-10-28T06:00:00.000Z
+title: JoySpace.wiki
+url: https://joyspace.wiki
+description: www.joyspace.wiki
+date: 2024-10-29T22:22:35.942Z
 tags: []
 type: bookmark
-site_name: univault.org
-favicon: https://www.google.com/s2/favicons?domain=https://univault.org&sz=128
-
+site_name: joyspace.wiki
+favicon: https://www.google.com/s2/favicons?domain=https://joyspace.wiki&sz=128
+image: 
 ---
 
-Notes: univault site here after edit
+This is the joyspace site
