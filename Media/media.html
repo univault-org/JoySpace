@@ -3,1485 +3,752 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>JoySpace Media</title>
+    <title>JoySpace Media - React</title>
+
+    <!-- React and ReactDOM -->
+    <script
+      crossorigin
+      src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"
+    ></script>
+
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone@7.23.8/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?v=3.4.1"></script>
+
+    <!-- Bootstrap Icons -->
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
     />
 
-    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
-
-    <style>
-      /* Same base styles */
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      :root {
-        /* Chartreuse Primary Colors */
-        --primary-50: #f7fee7;
-        --primary-100: #ecfccb;
-        --primary-200: #d9f99d;
-        --primary-300: #bef264;
-        --primary-400: #a3e635;
-        --primary-500: #84cc16;
-        --primary-600: #65a30d;
-        --primary-700: #4d7c0f;
-        --primary-800: #3f6212;
-        --primary-900: #365314;
-
-        /* Supporting Neutral Colors */
-        --neutral-50: #f9fafb;
-        --neutral-100: #f3f4f6;
-        --neutral-200: #e5e7eb;
-        --neutral-300: #d1d5db;
-        --neutral-400: #9ca3af;
-        --neutral-500: #6b7280;
-        --neutral-600: #4b5563;
-        --neutral-700: #374151;
-        --neutral-800: #1f2937;
-        --neutral-900: #111827;
-      }
-
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Oxygen, Ubuntu, Cantarell, sans-serif;
-        background-color: var(--neutral-900);
-        min-height: 100vh;
-        color: var(--neutral-50);
-        display: grid;
-        grid-template-columns: 1fr 320px;
-        grid-template-rows: 1fr;
-        height: 100vh;
-        overflow: hidden;
-      }
-
-      /* Main content area */
-      .main-content {
-        position: relative;
-        width: calc(100vw - 320px);
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        margin-right: 320px;
-      }
-
-      /* Video player section */
-      .video-container {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        background: var(--neutral-800);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .video-player {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-      }
-
-      /* Video metadata section */
-      .video-metadata {
-        background: var(--neutral-800);
-        padding: 1.5rem;
-        border-top: 1px solid var(--neutral-700);
-      }
-
-      .video-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        color: var(--neutral-50);
-      }
-
-      .video-info {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        color: var(--neutral-400);
-        font-size: 0.875rem;
-        margin-bottom: 1rem;
-      }
-
-      .video-description {
-        color: var(--neutral-300);
-        font-size: 0.875rem;
-        line-height: 1.5;
-      }
-
-      /* Playlist sidebar */
-      .playlist-sidebar {
-        position: fixed;
-        right: 0;
-        top: 0;
-        width: 320px;
-        height: 100vh;
-        background: var(--neutral-800);
-        border-left: 1px solid var(--neutral-700);
-        display: flex;
-        flex-direction: column;
-        z-index: 50;
-      }
-
-      .playlist-header {
-        padding: 1rem;
-        border-bottom: 1px solid var(--neutral-700);
-        position: sticky;
-        top: 0;
-        background: var(--neutral-800);
-        z-index: 10;
-      }
-
-      .header-content {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .playlist-title {
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: var(--neutral-200);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-
-      .playlist-title i {
-        color: var(--primary-500);
-      }
-
-      .header-action-btn {
-        background: none;
-        border: none;
-        color: var(--neutral-400);
-        width: 2rem;
-        height: 2rem;
-        border-radius: 0.375rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s ease;
-      }
-
-      .header-action-btn:hover {
-        background: var(--neutral-700);
-        color: var(--primary-300);
-      }
-
-      .playlist-items {
-        padding: 0.5rem;
-      }
-
-      .playlist-item {
-        display: flex;
-        gap: 1rem;
-        padding: 0.75rem;
-        border-radius: 0.5rem;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-
-      .playlist-item:hover {
-        background: var(--neutral-700);
-      }
-
-      .playlist-item.active {
-        background: var(--primary-900);
-      }
-
-      .thumbnail-wrapper {
-        width: 120px;
-        height: 67.5px;
-        flex-shrink: 0;
-        border-radius: 0.25rem;
-        overflow: hidden;
-        position: relative;
-      }
-
-      .thumbnail {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-
-      .duration {
-        position: absolute;
-        bottom: 0.25rem;
-        right: 0.25rem;
-        background: rgba(0, 0, 0, 0.8);
-        padding: 0.125rem 0.25rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-      }
-
-      .playlist-item-info {
-        flex: 1;
-        min-width: 0;
-      }
-
-      .playlist-item-title {
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: var(--neutral-200);
-        margin-bottom: 0.25rem;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
-
-      .playlist-item-meta {
-        font-size: 0.75rem;
-        color: var(--neutral-500);
-      }
-
-      /* Custom scrollbar */
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-
-      ::-webkit-scrollbar-track {
-        background: var(--neutral-800);
-      }
-
-      ::-webkit-scrollbar-thumb {
-        background: var(--neutral-600);
-        border-radius: 4px;
-      }
-
-      ::-webkit-scrollbar-thumb:hover {
-        background: var(--neutral-500);
-      }
-
-      /* Add these styles to the existing <style> section */
-      .video-tags {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-
-      .tag {
-        background: var(--neutral-700);
-        padding: 0.25rem 0.5rem;
-        border-radius: 1rem;
-        font-size: 0.75rem;
-      }
-
-      .video-author,
-      .video-date,
-      .video-duration {
-        display: flex;
-        align-items: center;
-        gap: 0.375rem;
-      }
-
-      .bi {
-        font-size: 1.1em;
-      }
-
-      /* Hover effects for playlist items */
-      .playlist-item {
-        position: relative;
-      }
-
-      .playlist-item::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0;
-        height: 100%;
-        width: 3px;
-        background: var(--primary-500);
-        opacity: 0;
-        transition: opacity 0.2s;
-      }
-
-      .playlist-item.active::after {
-        opacity: 1;
-      }
-
-      .playlist-item:hover .playlist-item-title {
-        color: var(--primary-300);
-      }
-
-      /* Floating Controls */
-      .floating-controls {
-        position: absolute;
-        right: 2rem;
-        top: 50%;
-        transform: translateY(-50%);
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-      }
-
-      .video-container:hover .floating-controls {
-        opacity: 1;
-      }
-
-      .control-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        background: rgba(0, 0, 0, 0.6);
-        padding: 0.5rem;
-        border-radius: 1rem;
-        backdrop-filter: blur(10px);
-      }
-
-      .control-btn {
-        width: 3rem;
-        height: 3rem;
-        border-radius: 50%;
-        border: none;
-        background: rgba(255, 255, 255, 0.1);
-        color: white;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-        position: relative;
-      }
-
-      .control-btn:hover {
-        background: var(--primary-500);
-        transform: scale(1.1);
-      }
-
-      /* Tooltip */
-      .control-btn::before {
-        content: attr(data-tooltip);
-        position: absolute;
-        right: calc(100% + 1rem);
-        top: 50%;
-        transform: translateY(-50%);
-        background: rgba(0, 0, 0, 0.8);
-        padding: 0.5rem 1rem;
-        border-radius: 0.5rem;
-        font-size: 0.875rem;
-        white-space: nowrap;
-        opacity: 0;
-        transition: opacity 0.2s ease;
-      }
-
-      .control-btn:hover::before {
-        opacity: 1;
-      }
-
-      /* Progress Bar */
-      .video-progress {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 4rem;
-        background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
-        display: flex;
-        align-items: flex-end;
-        padding: 1rem;
-      }
-
-      .progress-bar {
-        width: 100%;
-        height: 0.25rem;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 1rem;
-        cursor: pointer;
-        position: relative;
-      }
-
-      .progress-filled {
-        position: absolute;
-        left: 0;
-        top: 0;
-        height: 100%;
-        background: var(--primary-500);
-        border-radius: 1rem;
-        width: 45%; /* Example progress */
-      }
-
-      .progress-preview {
-        position: absolute;
-        bottom: calc(100% + 1rem);
-        transform: translateX(-50%);
-        background: rgba(0, 0, 0, 0.8);
-        padding: 0.25rem;
-        border-radius: 0.5rem;
-        display: none;
-      }
-
-      .progress-bar:hover .progress-preview {
-        display: block;
-      }
-
-      .preview-thumbnail {
-        width: 160px;
-        height: 90px;
-        border-radius: 0.25rem;
-      }
-
-      .preview-time {
-        position: absolute;
-        bottom: -1.5rem;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(0, 0, 0, 0.8);
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-      }
-
-      /* Master Controls */
-      .master-controls {
-        background: var(--neutral-800);
-        border-bottom: 1px solid var(--neutral-700);
-        padding: 1rem;
-      }
-
-      /* Search Bar */
-      .search-container {
-        margin-bottom: 1rem;
-      }
-
-      .search-wrapper {
-        position: relative;
-        display: flex;
-        align-items: center;
-        background: var(--neutral-700);
-        border-radius: 0.75rem;
-        padding: 0.5rem 1rem;
-        transition: all 0.3s ease;
-      }
-
-      .search-wrapper:focus-within {
-        background: var(--neutral-600);
-        box-shadow: 0 0 0 2px var(--primary-500);
-      }
-
-      .search-wrapper i {
-        color: var(--neutral-400);
-        transition: color 0.3s ease;
-      }
-
-      .search-wrapper:focus-within i {
-        color: var(--primary-500);
-      }
-
-      .search-input {
-        background: none;
-        border: none;
-        color: var(--neutral-100);
-        font-size: 0.875rem;
-        padding: 0.25rem 0.5rem;
-        width: 100%;
-      }
-
-      .search-input::placeholder {
-        color: var(--neutral-400);
-      }
-
-      .search-input:focus {
-        outline: none;
-      }
-
-      .search-clear {
-        background: none;
-        border: none;
-        color: var(--neutral-400);
-        cursor: pointer;
-        padding: 0.25rem;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .search-clear:hover {
-        background: var(--neutral-600);
-        color: var(--neutral-200);
-      }
-
-      /* Action Groups */
-      .action-groups {
-        display: flex;
-        justify-content: space-between;
-        gap: 0.5rem;
-      }
-
-      .action-group {
-        display: flex;
-        gap: 0.25rem;
-        padding: 0.25rem;
-        background: var(--neutral-700);
-        border-radius: 0.75rem;
-      }
-
-      .action-btn {
-        position: relative;
-        width: 2.5rem;
-        height: 2.5rem;
-        border-radius: 0.5rem;
-        border: none;
-        background: transparent;
-        color: var(--neutral-300);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-      }
-
-      .action-btn:hover {
-        background: var(--neutral-600);
-        color: var(--primary-300);
-      }
-
-      .action-btn i {
-        font-size: 1.25rem;
-      }
-
-      /* Tooltips */
-      .action-btn::after {
-        content: attr(data-tooltip);
-        position: absolute;
-        bottom: calc(100% + 0.5rem);
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--neutral-900);
-        color: var(--neutral-100);
-        padding: 0.375rem 0.75rem;
-        border-radius: 0.375rem;
-        font-size: 0.75rem;
-        white-space: nowrap;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.2s ease;
-      }
-
-      .action-btn:hover::after {
-        opacity: 1;
-        visibility: visible;
-      }
-
-      /* Filter Badge */
-      .filter-badge {
-        position: absolute;
-        top: -0.25rem;
-        right: -0.25rem;
-        background: var(--primary-500);
-        color: var(--neutral-900);
-        font-size: 0.75rem;
-        font-weight: 600;
-        padding: 0.125rem 0.375rem;
-        border-radius: 1rem;
-        border: 2px solid var(--neutral-800);
-      }
-
-      /* Animation Classes */
-      .action-btn.active {
-        background: var(--primary-500);
-        color: var(--neutral-900);
-      }
-
-      @keyframes pulse {
-        0% {
-          transform: scale(1);
-        }
-        50% {
-          transform: scale(1.05);
-        }
-        100% {
-          transform: scale(1);
-        }
-      }
-
-      .action-btn.pulse {
-        animation: pulse 1s infinite;
-      }
-
-      /* Add animation for settings icon */
-      .header-action-btn {
-        position: relative;
-      }
-
-      .header-action-btn::after {
-        content: attr(data-tooltip);
-        position: absolute;
-        top: calc(100% + 0.5rem);
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--neutral-900);
-        color: var(--neutral-100);
-        padding: 0.375rem 0.75rem;
-        border-radius: 0.375rem;
-        font-size: 0.75rem;
-        white-space: nowrap;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.2s ease;
-        z-index: 20;
-      }
-
-      .header-action-btn:hover::after {
-        opacity: 1;
-        visibility: visible;
-      }
-
-      /* Base tooltip styles */
-      .tooltip-base {
-        position: absolute;
-        background: var(--neutral-900);
-        color: var(--neutral-100);
-        padding: 0.375rem 0.75rem;
-        border-radius: 0.375rem;
-        font-size: 0.75rem;
-        white-space: nowrap;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.2s ease;
-        z-index: 1000;
-      }
-
-      /* Left tooltip with increased spacing */
-      .tooltip-left {
-        right: calc(100% + 1.5rem); /* Increased spacing */
-        top: 50%;
-        transform: translateY(-50%);
-      }
-
-      /* Last button (share) tooltip */
-      .action-group.organize .action-btn:last-child::after {
-        content: attr(data-tooltip);
-        @extend .tooltip-base;
-        @extend .tooltip-left;
-      }
-
-      /* Show tooltips on hover */
-      [data-tooltip]:hover::after {
-        opacity: 1;
-        visibility: visible;
-      }
-
-      /* Update specific button styles */
-      .header-action-btn::after {
-        content: attr(data-tooltip);
-        @extend .tooltip-base;
-        @extend .tooltip-bottom;
-      }
-      /* Primary actions (right side tooltips) */
-      .action-group.primary .action-btn::after {
-        content: attr(data-tooltip);
-        margin-left: 0.25rem;
-        @extend .tooltip-base;
-        @extend .tooltip-right;
-      }
-
-      /* Last buttons in organize group (left side tooltips) */
-      .action-group.organize .action-btn:last-child::after {
-        margin-right: 1rem;
-        content: attr(data-tooltip);
-        @extend .tooltip-base;
-        @extend .tooltip-left;
-      }
-
-      /* Other buttons (top tooltips) */
-      .action-group.organize .action-btn:not(:last-child)::after {
-        content: attr(data-tooltip);
-        @extend .tooltip-base;
-        @extend .tooltip-top;
-      }
-
-      [data-tooltip]::after {
-        transition-delay: 150ms;
-      }
-
-      [data-tooltip]:hover::after {
-        transition-delay: 0ms;
-      }
-
-      .media-metadata-card {
-        background: var(--neutral-800);
-        border-radius: 1rem;
-        padding: 1.25rem;
-        margin-bottom: 1rem;
-        border: 1px solid var(--neutral-700);
-        opacity: 1;
-        transform: translateY(0);
-        transition: all 0.3s ease;
-        cursor: pointer;
-        position: relative;
-        background: linear-gradient(
-              to right,
-              var(--neutral-800),
-              var(--neutral-800)
-            )
-            padding-box,
-          linear-gradient(to right, transparent, var(--primary-500)) border-box;
-        border: 1px solid transparent;
-      }
-
-      .media-metadata-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-        background: linear-gradient(
-              to right,
-              var(--neutral-800),
-              var(--neutral-750)
-            )
-            padding-box,
-          linear-gradient(to right, var(--primary-500), var(--primary-300))
-            border-box;
-      }
-
-      /* Shine effect on hover */
-      .media-metadata-card::after {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 200%;
-        height: 100%;
-        background: linear-gradient(
-          to right,
-          transparent 0%,
-          rgba(255, 255, 255, 0.05) 50%,
-          transparent 100%
-        );
-        transform: translateX(-100%);
-        transition: transform 0.6s ease;
-      }
-
-      .media-metadata-card:hover::after {
-        transform: translateX(0);
-      }
-
-      .metadata-header {
-        margin-bottom: 1rem;
-      }
-
-      .metadata-title-group {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 1rem;
-        margin-bottom: 0.5rem;
-      }
-
-      .metadata-title {
-        color: var(--neutral-100);
-        font-size: 1.125rem;
-        font-weight: 500;
-        line-height: 1.4;
-        margin: 0;
-      }
-
-      .metadata-duration {
-        color: var(--neutral-400);
-        font-size: 0.875rem;
-        white-space: nowrap;
-      }
-
-      .metadata-subtitle {
-        display: flex;
-        gap: 1rem;
-        color: var(--neutral-400);
-        font-size: 0.875rem;
-      }
-
-      .metadata-tags {
-        display: flex;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-        flex-wrap: wrap;
-      }
-
-      .tag {
-        background: var(--neutral-700);
-        color: var(--primary-300);
-        padding: 0.25rem 0.75rem;
-        border-radius: 1rem;
-        font-size: 0.75rem;
-      }
-
-      .metadata-description {
-        color: var(--neutral-300);
-        font-size: 0.875rem;
-        line-height: 1.5;
-      }
-
-      .pip-layout {
-        display: none;
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: calc(100% - 320px);
-        height: 100vh;
-        padding: 2rem;
-        overflow-y: auto;
-        background: var(--neutral-900);
-      }
-
-      .current-metadata {
-        position: sticky;
-        top: 0;
-        padding: 1rem;
-        background: linear-gradient(
-          to bottom,
-          var(--neutral-900) 80%,
-          transparent
-        );
-        z-index: 10;
-        margin-bottom: 2rem;
-      }
-
-      .metadata-cards-container {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        width: 100%;
-        max-width: 100%;
-        padding: 1rem;
-        opacity: 1;
-      }
-
-      .pip-video-container {
-        position: fixed;
-        bottom: 2rem;
-        right: calc(320px + 2rem);
-        width: 320px;
-        height: 180px;
-        border-radius: 0.75rem;
-        overflow: hidden;
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
-        z-index: 100;
-        background: var(--neutral-800);
-        opacity: 1;
-        transform: translateY(0);
-      }
-
-      .pip-video-container video {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-      }
-
-      @keyframes shimmer {
-        0% {
-          background-position: -1000px 0;
-        }
-        100% {
-          background-position: 1000px 0;
-        }
-      }
-
-      .metadata-card-skeleton {
-        background: linear-gradient(
-          90deg,
-          var(--neutral-800) 0%,
-          var(--neutral-700) 50%,
-          var(--neutral-800) 100%
-        );
-        background-size: 1000px 100%;
-        animation: shimmer 2s infinite linear;
-      }
-
-      /* Optimize control buttons */
-      .control-btn.hover-ready {
-        transition: transform 0.2s ease-out;
-        transform: scale(1);
-      }
-
-      .control-btn.hover-ready:hover {
-        transform: scale(1.1);
-      }
-
-      /* Update floating controls */
-      .floating-controls {
-        position: absolute;
-        right: 2rem;
-        top: 50%;
-        transform: translateY(-50%);
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        opacity: 0;
-        z-index: 1000;
-        pointer-events: none;
-        transition: opacity 0.2s ease-out;
-      }
-
-      .video-container:hover .floating-controls {
-        opacity: 1;
-        pointer-events: auto;
-      }
-
-      /* Optimize PIP container */
-      .pip-video-container {
-        position: fixed;
-        bottom: 2rem;
-        right: calc(320px + 2rem);
-        width: 320px;
-        height: 180px;
-        border-radius: 0.75rem;
-        overflow: hidden;
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
-        z-index: 100;
-        background: var(--neutral-800);
-        transform: translateZ(0); /* Hardware acceleration */
-      }
-    </style>
-  </head>
-  <body>
-    <!-- Main content area -->
-    <div class="main-content">
-      <!-- Video player section -->
-      <div class="video-container">
-        <video class="video-player" controls>
-          <source
-            src="https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-            type="video/mp4"
-          />
-          Your browser does not support the video tag.
-        </video>
-
-        <!-- Floating Action Menu -->
-        <div class="floating-controls">
-          <div class="control-group primary">
-            <button class="control-btn" data-tooltip="Add to Playlist">
-              <i class="bi bi-plus-circle"></i>
-            </button>
-            <button class="control-btn" data-tooltip="Share">
-              <i class="bi bi-share"></i>
-            </button>
-            <button class="control-btn" data-tooltip="Download">
-              <i class="bi bi-download"></i>
-            </button>
-          </div>
-
-          <div class="control-group secondary">
-            <button
-              class="control-btn"
-              data-tooltip="Picture in Picture"
-              data-action="pip"
-            >
-              <i class="bi bi-pip"></i>
-            </button>
-            <button class="control-btn" data-tooltip="Theater Mode">
-              <i class="bi bi-arrows-fullscreen"></i>
-            </button>
-          </div>
-        </div>
-
-        <!-- Progress Bar with Preview -->
-        <div class="video-progress">
-          <div class="progress-preview">
-            <img src="thumbnail.jpg" alt="Preview" class="preview-thumbnail" />
-            <span class="preview-time">2:45</span>
-          </div>
-          <div class="progress-bar">
-            <div class="progress-filled"></div>
-          </div>
-          <div class="chapter-markers">
-            <!-- Chapter markers will be dynamically added -->
-          </div>
-        </div>
-      </div>
-
-      <!-- Video metadata section -->
-      <div class="video-metadata">
-        <h1 class="video-title">
-          Building a Second Brain: A Proven Method to Organize Your Digital Life
-        </h1>
-        <div class="video-info">
-          <span class="video-author">
-            <i class="bi bi-person-circle"></i>
-            Tiago Forte
-          </span>
-          <span class="video-date">
-            <i class="bi bi-calendar3"></i>
-            Mar 15, 2024
-          </span>
-          <span class="video-duration">
-            <i class="bi bi-clock"></i>
-            45:32
-          </span>
-          <div class="video-tags">
-            <i class="bi bi-tags"></i>
-            <span class="tag">productivity</span>
-            <span class="tag">knowledge-management</span>
-            <span class="tag">digital-notes</span>
-          </div>
-        </div>
-        <div class="video-description">
-          Learn how to organize your digital life and build a reliable system
-          for managing information overload. This session covers the core
-          principles of the Building a Second Brain methodology and practical
-          tips for implementation.
-        </div>
-      </div>
-    </div>
-
-    <!-- Playlist sidebar -->
-    <div class="playlist-sidebar">
-      <div class="playlist-header">
-        <div class="header-content">
-          <h2 class="playlist-title">
-            <i class="bi bi-collection-play"></i>
-            JoySpace Media
-          </h2>
-          <button class="header-action-btn" data-tooltip="Settings">
-            <i class="bi bi-gear"></i>
-          </button>
-        </div>
-      </div>
-      <!-- Add this right after the playlist-header -->
-      <div class="master-controls">
-        <div class="search-container">
-          <div class="search-wrapper">
-            <i class="bi bi-search"></i>
-            <input
-              type="text"
-              class="search-input"
-              placeholder="Search media..."
-            />
-            <button class="search-clear" style="display: none">
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
-        </div>
-
-        <div class="action-groups">
-          <!-- Primary Actions -->
-          <div class="action-group primary">
-            <button class="action-btn" data-tooltip="Add New">
-              <i class="bi bi-plus-lg"></i>
-            </button>
-            <button class="action-btn" data-tooltip="Import from URL">
-              <i class="bi bi-link-45deg"></i>
-            </button>
-          </div>
-
-          <!-- Organization Actions -->
-          <div class="action-group organize">
-            <button class="action-btn" data-tooltip="Filter Media">
-              <i class="bi bi-funnel"></i>
-              <span class="filter-badge">2</span>
-            </button>
-            <button class="action-btn" data-tooltip="Sort">
-              <i class="bi bi-sort-down"></i>
-            </button>
-            <button class="action-btn" data-tooltip="Playlists">
-              <i class="bi bi-collection"></i>
-            </button>
-            <button class="action-btn" data-tooltip="Share">
-              <i class="bi bi-share"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="playlist-items">
-        <!-- Active video -->
-        <div class="playlist-item active">
-          <div class="thumbnail-wrapper">
-            <img src="https://picsum.photos/240/135" alt="" class="thumbnail" />
-            <div class="duration">45:32</div>
-          </div>
-          <div class="playlist-item-info">
-            <div class="playlist-item-title">
-              Building a Second Brain: A Proven Method
-            </div>
-            <div class="playlist-item-meta">Tiago Forte • 15K views</div>
-          </div>
-        </div>
-
-        <!-- Other videos in playlist -->
-        <div class="playlist-item">
-          <div class="thumbnail-wrapper">
-            <img
-              src="https://picsum.photos/240/135?random=1"
-              alt=""
-              class="thumbnail"
-            />
-            <div class="duration">32:15</div>
-          </div>
-          <div class="playlist-item-info">
-            <div class="playlist-item-title">
-              The PARA Method: A Universal System for Organizing Digital
-              Information
-            </div>
-            <div class="playlist-item-meta">Tiago Forte • 8.2K views</div>
-          </div>
-        </div>
-
-        <div class="playlist-item">
-          <div class="thumbnail-wrapper">
-            <img
-              src="https://picsum.photos/240/135?random=2"
-              alt=""
-              class="thumbnail"
-            />
-            <div class="duration">28:44</div>
-          </div>
-          <div class="playlist-item-info">
-            <div class="playlist-item-title">
-              Progressive Summarization: A Practical Technique for Taking Notes
-            </div>
-            <div class="playlist-item-meta">Tiago Forte • 12K views</div>
-          </div>
-        </div>
-
-        <div class="playlist-item">
-          <div class="thumbnail-wrapper">
-            <img
-              src="https://picsum.photos/240/135?random=3"
-              alt=""
-              class="thumbnail"
-            />
-            <div class="duration">41:20</div>
-          </div>
-          <div class="playlist-item-info">
-            <div class="playlist-item-title">
-              Just-In-Time Project Management: The Future of Knowledge Work
-            </div>
-            <div class="playlist-item-meta">Tiago Forte • 5.8K views</div>
-          </div>
-        </div>
-
-        <!-- Add more playlist items as needed -->
-      </div>
-    </div>
-
-    <!-- Metadata Card Template -->
-    <div class="media-metadata-card">
-      <div class="metadata-header">
-        <div class="metadata-title-group">
-          <h3 class="metadata-title">
-            Understanding the Basics of React Hooks
-          </h3>
-          <span class="metadata-duration">12:34</span>
-        </div>
-        <div class="metadata-subtitle">
-          <span class="metadata-author">React Team</span>
-          <span class="metadata-date">Mar 15, 2024</span>
-        </div>
-      </div>
-      <div class="metadata-tags">
-        <span class="tag">react</span>
-        <span class="tag">javascript</span>
-        <span class="tag">programming</span>
-      </div>
-      <div class="metadata-description">
-        Learn how React Hooks can simplify your components and make code more
-        reusable.
-      </div>
-    </div>
-
-    <div class="pip-layout">
-      <!-- Current video metadata (pinned to top) -->
-      <div class="current-metadata">
-        <!-- Will be populated with current video metadata -->
-      </div>
-
-      <!-- Scrolling metadata cards -->
-      <div class="metadata-cards-container">
-        <!-- Will be dynamically populated -->
-      </div>
-
-      <!-- PIP Video -->
-      <div class="pip-video-container">
-        <video class="pip-player">
-          <!-- video source -->
-        </video>
-      </div>
-    </div>
+    <!-- YouTube iframe API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
 
     <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        // Data definitions
-        const currentVideoData = {
+      // Tailwind config with specific theme
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                200: "#d9f99d",
+                300: "#bef264",
+                400: "#a3e635",
+                500: "#84cc16",
+                600: "#65a30d",
+                700: "#4d7c0f",
+                800: "#3f6212",
+                900: "#365314",
+              },
+              neutral: {
+                50: "#f9fafb",
+                100: "#f3f4f6",
+                200: "#e5e7eb",
+                300: "#d1d5db",
+                400: "#9ca3af",
+                500: "#6b7280",
+                600: "#4b5563",
+                700: "#374151",
+                800: "#1f2937",
+                900: "#111827",
+              },
+            },
+            keyframes: {
+              fadeIn: {
+                "0%": { opacity: "0", transform: "translateY(10px)" },
+                "100%": { opacity: "1", transform: "translateY(0)" },
+              },
+              slideUp: {
+                "0%": { transform: "translateY(100%)" },
+                "100%": { transform: "translateY(0)" },
+              },
+              slideUpFade: {
+                "0%": {
+                  transform: "translateY(100%)",
+                  opacity: "0",
+                },
+                "100%": {
+                  transform: "translateY(0)",
+                  opacity: "1",
+                },
+              },
+              scaleToPip: {
+                "0%": {
+                  transform: "scale(1) translate(0, 0)",
+                  borderRadius: "0",
+                },
+                "100%": {
+                  transform: "scale(0.3) translate(150%, -50%)",
+                  borderRadius: "0.75rem",
+                },
+              },
+            },
+            animation: {
+              fadeIn: "fadeIn 0.5s ease-out",
+              slideUp: "slideUp 0.5s ease-out",
+              slideUpFade: "slideUpFade 0.5s ease-out",
+              scaleToPip: "scaleToPip 0.5s ease-out forwards",
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="bg-neutral-900 text-neutral-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+      // Update the mock data with real video IDs and information
+      const currentVideoData = {
+        id: "WqKluXIra70", // Building a Second Brain video
+        title:
+          "Building a Second Brain: A Proven Method to Organize Your Digital Life and Unlock Your Creative Potential",
+        author: "Tiago Forte",
+        duration: "1:03:47",
+        tags: [
+          "productivity",
+          "knowledge-management",
+          "digital-notes",
+          "second-brain",
+        ],
+      };
+
+      const mediaList = [
+        {
+          id: "WqKluXIra70",
           title:
             "Building a Second Brain: A Proven Method to Organize Your Digital Life",
           author: "Tiago Forte",
-          date: "Mar 15, 2024",
-          duration: "45:32",
-          tags: ["productivity", "knowledge-management", "digital-notes"],
-          description:
-            "Learn how to organize your digital life and build a reliable system for managing information overload.",
+          duration: "1:03:47",
+          tags: ["productivity", "organization"],
+        },
+        {
+          id: "K-ssUVyfn5g",
+          title: "How To Take Smart Notes (Zettelkasten in Notion)",
+          author: "Ali Abdaal",
+          duration: "19:00",
+          tags: ["productivity", "notes", "notion"],
+        },
+        {
+          id: "f3dDVtJ3c-8",
+          title: "Building A Second Brain Book Summary (Complete)",
+          author: "Samuel Gerald",
+          duration: "13:37",
+          tags: ["book-summary", "productivity"],
+        },
+        {
+          id: "MYJsGksojms",
+          title: "How I Remember Everything I Read",
+          author: "Ali Abdaal",
+          duration: "15:33",
+          tags: ["reading", "memory", "learning"],
+        },
+        {
+          id: "vxOffM_tVHI",
+          title: "How To Build A Second Brain",
+          author: "Matt D'Avella",
+          duration: "14:41",
+          tags: ["productivity", "organization"],
+        },
+      ];
+
+      // Add this metadata list near your other constants
+      const metadataList = [
+        {
+          timestamp: "0:00",
+          title: "Introduction to Building a Second Brain",
+          notes: "Overview of the PARA method and its benefits",
+          tags: ["introduction", "methodology"],
+        },
+        {
+          timestamp: "2:15",
+          title: "The Four Components of PARA",
+          notes:
+            "Projects, Areas, Resources, Archives - A systematic approach to organizing digital information",
+          tags: ["PARA", "organization"],
+        },
+        {
+          timestamp: "5:30",
+          title: "Digital Note-Taking Best Practices",
+          notes:
+            "Progressive summarization technique for effective note-taking",
+          tags: ["notes", "summarization"],
+        },
+        {
+          timestamp: "8:45",
+          title: "The Collector's Fallacy",
+          notes:
+            "Why collecting information without processing it is counterproductive",
+          tags: ["productivity", "mindset"],
+        },
+        {
+          timestamp: "12:20",
+          title: "CODE Method Explained",
+          notes:
+            "Capture, Organize, Distill, Express - The four steps to knowledge management",
+          tags: ["CODE", "workflow"],
+        },
+        // Add more metadata entries...
+      ];
+
+      // Update the YouTubePlayer component to handle state persistence
+      function YouTubePlayer({
+        videoId,
+        onStateChange,
+        className,
+        startTime = 0,
+      }) {
+        const playerRef = React.useRef(null);
+        const playerInstanceRef = React.useRef(null);
+
+        React.useEffect(() => {
+          // Initialize player
+          playerInstanceRef.current = new YT.Player(playerRef.current, {
+            videoId: videoId,
+            playerVars: {
+              autoplay: 1, // Enable autoplay
+              start: Math.floor(startTime), // Start from saved time
+              modestbranding: 1,
+              rel: 0,
+              showinfo: 0,
+            },
+            events: {
+              onStateChange: (event) => {
+                if (onStateChange) {
+                  onStateChange(event);
+                }
+              },
+            },
+          });
+
+          return () => {
+            if (playerInstanceRef.current) {
+              playerInstanceRef.current.destroy();
+            }
+          };
+        }, [videoId]);
+
+        return (
+          <div className={className}>
+            <div ref={playerRef} className="w-full h-full" />
+          </div>
+        );
+      }
+
+      function Header() {
+        const [isInputFocused, setIsInputFocused] = React.useState(false);
+        const [bookmarkUrl, setBookmarkUrl] = React.useState("");
+        const inputRef = React.useRef(null);
+        const fileInputRef = React.useRef(null);
+
+        React.useEffect(() => {
+          const handleKeyDown = (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+              e.preventDefault();
+              inputRef.current?.focus();
+            }
+          };
+          window.addEventListener("keydown", handleKeyDown);
+          return () => window.removeEventListener("keydown", handleKeyDown);
+        }, []);
+
+        return (
+          <header className="sticky top-0 z-50 bg-neutral-800/80 backdrop-blur-md border-b border-neutral-700">
+            <div className="px-6 h-16 flex items-center justify-between gap-4">
+              {/* Brand */}
+              <div className="flex-shrink-0">
+                <div className="text-primary-400 text-2xl font-bold tracking-tight">
+                  <span className="text-white">Joy</span>Space
+                  <span className="text-neutral-400 text-sm ml-2">Media</span>
+                </div>
+              </div>
+
+              {/* Bookmark Input Group */}
+              <div
+                className={`flex items-center gap-3 transition-all duration-300 ${
+                  isInputFocused ? "flex-1 max-w-2xl" : "w-80"
+                }`}
+              >
+                {/* URL Input */}
+                <div
+                  className={`flex-1 relative transition-all duration-300 ${
+                    isInputFocused ? "scale-[1.02]" : ""
+                  }`}
+                >
+                  <div
+                    className={`absolute inset-0 bg-neutral-700/30 rounded-xl transition-all duration-300 
+                            ${
+                              isInputFocused
+                                ? "blur-xl opacity-50"
+                                : "blur-none opacity-0"
+                            }`}
+                  ></div>
+
+                  <div
+                    className={`relative flex items-center bg-neutral-700/50 rounded-xl transition-all duration-300
+                            ${
+                              isInputFocused
+                                ? "bg-neutral-700 ring-2 ring-primary-500/50"
+                                : ""
+                            }`}
+                  >
+                    <div
+                      className={`pl-4 transition-colors duration-300 ${
+                        isInputFocused ? "text-primary-400" : "text-neutral-400"
+                      }`}
+                    >
+                      <i className="bi bi-link-45deg text-lg"></i>
+                    </div>
+
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={bookmarkUrl}
+                      onChange={(e) => setBookmarkUrl(e.target.value)}
+                      onFocus={() => setIsInputFocused(true)}
+                      onBlur={() => setIsInputFocused(false)}
+                      placeholder="Add video URL..."
+                      className="flex-1 px-4 py-2.5 bg-transparent text-sm text-neutral-100 placeholder-neutral-400 focus:outline-none"
+                    />
+
+                    {/* Keyboard Shortcut */}
+                    <div
+                      className={`px-4 flex items-center gap-1 text-xs transition-opacity duration-300
+                                ${
+                                  isInputFocused ? "opacity-0" : "opacity-100"
+                                } ${bookmarkUrl ? "hidden" : ""}`}
+                    >
+                      <kbd className="px-1.5 py-0.5 bg-neutral-700 rounded-md">
+                        ⌘K
+                      </kbd>
+                    </div>
+                  </div>
+                </div>
+
+                {/* File Upload Button - Only visible when input is focused */}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`flex-shrink-0 h-10 px-4 bg-neutral-700/50 rounded-xl hover:bg-neutral-700 transition-all duration-300 
+                                  hover:ring-2 hover:ring-primary-500/50 flex items-center gap-2
+                                  ${
+                                    isInputFocused
+                                      ? "opacity-100"
+                                      : "opacity-0 w-0 px-0 overflow-hidden"
+                                  }`}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="video/*"
+                    className="hidden"
+                  />
+                  <i className="bi bi-file-earmark-play text-neutral-400"></i>
+                  <span className="text-sm text-neutral-400">Choose File</span>
+                </button>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-3">
+                <button className="flex items-center gap-2 px-3 py-2 text-neutral-400 hover:text-white transition-colors">
+                  <i className="bi bi-bookmark"></i>
+                  <span className="text-sm">Bookmarks</span>
+                </button>
+                <button className="flex items-center gap-2 px-3 py-2 text-neutral-400 hover:text-white transition-colors">
+                  <i className="bi bi-clock"></i>
+                  <span className="text-sm">Recent</span>
+                </button>
+                <div className="w-px h-6 bg-neutral-700"></div>
+                <button className="flex items-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-neutral-900 rounded-lg transition-colors">
+                  <i className="bi bi-share"></i>
+                  <span className="text-sm font-medium">Share</span>
+                </button>
+              </div>
+            </div>
+          </header>
+        );
+      }
+
+      function NoteTaking({ currentTime, videoId }) {
+        const [noteText, setNoteText] = React.useState("");
+        const [isDraft, setIsDraft] = React.useState(false);
+
+        const formatTimestamp = (seconds) => {
+          const minutes = Math.floor(seconds / 60);
+          const remainingSeconds = Math.floor(seconds % 60);
+          return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
         };
 
-        const mediaList = [
-          {
-            title:
-              "The PARA Method: A Universal System for Organizing Digital Information",
-            author: "Tiago Forte",
-            date: "Mar 14, 2024",
-            duration: "32:15",
-            tags: ["organization", "productivity", "systems"],
-            description:
-              "Discover a simple but powerful method for organizing all your digital information.",
-          },
-          {
-            title:
-              "Progressive Summarization: A Practical Technique for Taking Notes",
-            author: "Tiago Forte",
-            date: "Mar 13, 2024",
-            duration: "28:44",
-            tags: ["note-taking", "learning", "productivity"],
-            description:
-              "Learn how to take better notes that you'll actually use later.",
-          },
-          {
-            title: "Digital Organization Masterclass",
-            author: "Tiago Forte",
-            date: "Mar 12, 2024",
-            duration: "55:20",
-            tags: ["productivity", "organization", "digital-life"],
-            description:
-              "Master the art of organizing your digital life effectively.",
-          },
-          {
-            title: "Knowledge Management Systems",
-            author: "Tiago Forte",
-            date: "Mar 11, 2024",
-            duration: "41:30",
-            tags: ["knowledge-management", "systems", "productivity"],
-            description:
-              "Build robust systems for managing your knowledge effectively.",
-          },
-          {
-            title: "Personal Knowledge Management",
-            author: "Tiago Forte",
-            date: "Mar 10, 2024",
-            duration: "38:15",
-            tags: ["pkm", "knowledge-management", "productivity"],
-            description:
-              "Learn how to manage your personal knowledge effectively.",
-          },
-          // Add more items as needed
-        ];
-
-        function showMetadataCards() {
-          const cardsContainer = document.querySelector(
-            ".metadata-cards-container"
-          );
-          cardsContainer.innerHTML = ""; // Clear existing cards
-
-          // First populate current video metadata
-          const currentMetadata = document.querySelector(".current-metadata");
-          currentMetadata.innerHTML = `
-        <h2 class="video-title">${currentVideoData.title}</h2>
-        <div class="video-info">
-            <span class="video-author">${currentVideoData.author}</span>
-            <span class="video-duration">${currentVideoData.duration}</span>
-        </div>
-    `;
-
-          // Then animate each card with stagger
-          mediaList.forEach((data, index) => {
-            const card = createMetadataCard(data);
-            card.style.opacity = "0";
-            card.style.transform = "translateY(20px)";
-            cardsContainer.appendChild(card);
-
-            // Stagger the animation of each card
-            gsap.to(card, {
-              opacity: 1,
-              y: 0,
-              duration: 0.5,
-              delay: index * 0.1, // Stagger effect
-              ease: "power2.out",
-            });
+        const handleSaveNote = () => {
+          // Add your save logic here
+          console.log("Saving note:", {
+            noteText,
+            timestamp: currentTime,
+            videoId,
           });
-        }
+          setNoteText("");
+          setIsDraft(false);
+        };
 
-        // Single PIP button click handler
-        document
-          .querySelector('[data-action="pip"]')
-          .addEventListener("click", () => {
-            const mainPlayer = document.querySelector(".video-container");
-            const mainContent = document.querySelector(".main-content");
-            const pipLayout = document.querySelector(".pip-layout");
-            const pipContainer = document.querySelector(".pip-video-container");
-            const videoPlayer = mainPlayer.querySelector("video");
+        const handleKeyDown = (e) => {
+          if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+            handleSaveNote();
+          }
+        };
 
-            if (!mainPlayer || !mainContent || !pipLayout || !pipContainer || !videoPlayer) {
-                console.error("Required elements not found");
-                return;
-            }
+        return (
+          <div className="border-b border-neutral-700 bg-neutral-800/50 p-6">
+            <div className="space-y-4">
+              {/* Current Timestamp and Quick Actions */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <button className="px-3 py-1.5 bg-primary-500/20 text-primary-400 rounded-lg hover:bg-primary-500/30 transition-colors flex items-center gap-2">
+                    <i className="bi bi-clock"></i>
+                    <span className="font-mono">
+                      {formatTimestamp(currentTime)}
+                    </span>
+                  </button>
+                  <span className="text-neutral-400">Currently watching</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button className="p-2 hover:bg-neutral-700/50 rounded-lg transition-colors text-neutral-400 hover:text-white">
+                    <i className="bi bi-bookmark-plus"></i>
+                  </button>
+                  <button className="p-2 hover:bg-neutral-700/50 rounded-lg transition-colors text-neutral-400 hover:text-white">
+                    <i className="bi bi-three-dots-vertical"></i>
+                  </button>
+                </div>
+              </div>
 
-            // First, pause any ongoing animations
-            gsap.killTweensOf(mainPlayer);
+              {/* Rich Text Toolbar */}
+              <div className="flex items-center gap-2 p-2 bg-neutral-700/30 rounded-lg">
+                <button className="p-2 hover:bg-neutral-700/50 rounded-lg transition-colors text-neutral-400 hover:text-white">
+                  <i className="bi bi-type-bold"></i>
+                </button>
+                <button className="p-2 hover:bg-neutral-700/50 rounded-lg transition-colors text-neutral-400 hover:text-white">
+                  <i className="bi bi-type-italic"></i>
+                </button>
+                <button className="p-2 hover:bg-neutral-700/50 rounded-lg transition-colors text-neutral-400 hover:text-white">
+                  <i className="bi bi-list-ul"></i>
+                </button>
+                <button className="p-2 hover:bg-neutral-700/50 rounded-lg transition-colors text-neutral-400 hover:text-white">
+                  <i className="bi bi-code-slash"></i>
+                </button>
+                <div className="h-6 w-px bg-neutral-600 mx-1"></div>
+                <button className="p-2 hover:bg-neutral-700/50 rounded-lg transition-colors text-neutral-400 hover:text-white">
+                  <i className="bi bi-link-45deg"></i>
+                </button>
+                <button className="p-2 hover:bg-neutral-700/50 rounded-lg transition-colors text-neutral-400 hover:text-white">
+                  <i className="bi bi-image"></i>
+                </button>
+              </div>
 
-            // Calculate position
-            const viewportWidth = window.innerWidth;
-            const sidebarWidth = 320;
-            const pipWidth = 320;
-            const margin = 32;
-            const finalX = viewportWidth - (sidebarWidth + pipWidth + margin);
-            const finalY = window.innerHeight - (180 + margin);
+              {/* Note Input */}
+              <div className="relative group">
+                <textarea
+                  value={noteText}
+                  onChange={(e) => {
+                    setNoteText(e.target.value);
+                    setIsDraft(true);
+                  }}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Take notes... (Press '/' for commands)"
+                  className="w-full h-32 bg-neutral-700/30 rounded-xl p-4 placeholder-neutral-500 text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500/50 resize-none"
+                ></textarea>
 
-            // Simple animation sequence
-            gsap.to(mainPlayer, {
-                scale: 0.3,
-                x: finalX,
-                y: finalY,
-                duration: 0.5,
-                ease: "power2.inOut",
-                onComplete: () => {
-                    // First pause and remove the original video
-                    videoPlayer.pause();
-                    videoPlayer.remove();
+                {/* Quick Tags */}
+                <div className="absolute bottom-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button className="px-3 py-1.5 bg-neutral-700/50 rounded-lg text-sm text-neutral-300 hover:bg-neutral-700 transition-colors">
+                    #summary
+                  </button>
+                  <button className="px-3 py-1.5 bg-neutral-700/50 rounded-lg text-sm text-neutral-300 hover:bg-neutral-700 transition-colors">
+                    #quote
+                  </button>
+                  <button className="px-3 py-1.5 bg-neutral-700/50 rounded-lg text-sm text-neutral-300 hover:bg-neutral-700 transition-colors">
+                    #question
+                  </button>
+                </div>
+              </div>
 
-                    // Copy video to PIP container
-                    const pipVideo = document.createElement("video");
-                    const currentSource = videoPlayer.querySelector('source');
-                    if (currentSource) {
-                        pipVideo.innerHTML = `<source src="${currentSource.src}" type="${currentSource.type}">`;
-                    } else {
-                        pipVideo.src = videoPlayer.currentSrc || videoPlayer.src;
-                    }
-                    pipVideo.currentTime = videoPlayer.currentTime;
-                    pipVideo.controls = true;
-                    pipVideo.autoplay = true;
-                    pipVideo.muted = videoPlayer.muted;
-                    pipVideo.volume = videoPlayer.volume;
-                    
-                    // Add event listeners for play/pause sync
-                    pipVideo.addEventListener('play', () => {
-                        if (videoPlayer) videoPlayer.pause();
-                    });
-                    
-                    pipVideo.addEventListener('pause', () => {
-                        if (videoPlayer) videoPlayer.pause();
-                    });
-
-                    // Clear and append
-                    pipContainer.innerHTML = "";
-                    pipContainer.appendChild(pipVideo);
-
-                    // Switch displays
-                    mainContent.style.display = "none";
-                    pipLayout.style.display = "block";
-                    pipContainer.style.display = "block";
-
-                    showMetadataCards();
-
-                    // Reset main player without the video
-                    gsap.set(mainPlayer, {
-                        clearProps: "all",
-                    });
-                },
-            });
-          });
-
-        // Remove or simplify hover animations that might cause flickering
-        document.addEventListener("DOMContentLoaded", () => {
-          // Simplify control button interactions
-          document
-            .querySelectorAll(".control-btn, .action-btn")
-            .forEach((btn) => {
-              btn.classList.add("hover-ready");
-            });
-        });
-      });
-
-      // Helper functions
-      function initializeCardInteractions() {
-        document.querySelectorAll(".media-metadata-card").forEach((card) => {
-          card.addEventListener("mouseenter", () => {
-            gsap.to(card, {
-              scale: 1.02,
-              duration: 0.3,
-              ease: "power2.out",
-            });
-          });
-
-          card.addEventListener("mouseleave", () => {
-            gsap.to(card, {
-              scale: 1,
-              duration: 0.3,
-              ease: "power2.out",
-            });
-          });
-
-          // Add click feedback
-          card.addEventListener("click", () => {
-            gsap
-              .timeline()
-              .to(card, {
-                scale: 0.98,
-                duration: 0.1,
-                ease: "power2.in",
-              })
-              .to(card, {
-                scale: 1,
-                duration: 0.2,
-                ease: "power2.out",
-              });
-          });
-        });
-      }
-
-      function initializeSmoothScroll() {
-        window.addEventListener("scroll", () => {
-          const cards = document.querySelectorAll(".media-metadata-card");
-
-          cards.forEach((card) => {
-            const rect = card.getBoundingClientRect();
-            const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
-
-            if (isVisible) {
-              const progress = 1 - rect.top / window.innerHeight;
-              gsap.to(card, {
-                scale: 0.98 + progress * 0.02,
-                opacity: 0.5 + progress * 0.5,
-                duration: 0.1,
-                overwrite: true,
-              });
-            }
-          });
-        });
-      }
-
-      function createMetadataCard(data) {
-        const card = document.createElement("div");
-        card.className = "media-metadata-card";
-
-        card.innerHTML = `
-          <div class="metadata-header">
-            <div class="metadata-title-group">
-              <h3 class="metadata-title">${data.title}</h3>
-              <span class="metadata-duration">${data.duration}</span>
-            </div>
-            <div class="metadata-subtitle">
-              <span class="metadata-author">${data.author}</span>
-              <span class="metadata-date">${data.date}</span>
+              {/* Action Buttons */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleSaveNote}
+                    className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-neutral-900 rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    <i className="bi bi-plus-lg"></i>
+                    Add Note
+                  </button>
+                  <button
+                    className={`px-4 py-2 bg-neutral-700/50 hover:bg-neutral-700 text-neutral-100 rounded-lg transition-colors ${
+                      !isDraft && "opacity-50 cursor-not-allowed"
+                    }`}
+                    disabled={!isDraft}
+                  >
+                    Save Draft
+                  </button>
+                </div>
+                <div className="text-sm text-neutral-400">
+                  Press{" "}
+                  <kbd className="px-2 py-1 bg-neutral-700 rounded-md">⌘</kbd> +{" "}
+                  <kbd className="px-2 py-1 bg-neutral-700 rounded-md">
+                    Enter
+                  </kbd>{" "}
+                  to save
+                </div>
+              </div>
             </div>
           </div>
-          <div class="metadata-tags">
-            ${data.tags
-              .map((tag) => `<span class="tag">${tag}</span>`)
-              .join("")}
-          </div>
-          <div class="metadata-description">${data.description}</div>
-        `;
-
-        return card;
+        );
       }
+
+      function PipVideo({ videoId, currentTime, onStateChange, onExitPip }) {
+        return (
+          <div
+            className="fixed bottom-8 right-8 animate-slideUp cursor-pointer group"
+            onClick={onExitPip}
+          >
+            <div className="relative">
+              {/* Main Video */}
+              <div className="w-80 h-48 bg-neutral-800 rounded-xl overflow-hidden shadow-lg">
+                <YouTubePlayer
+                  videoId={videoId}
+                  className="w-full h-full"
+                  onStateChange={onStateChange}
+                  startTime={currentTime}
+                />
+              </div>
+
+              {/* Hover Overlay with Expand Text */}
+              <div
+                className="absolute inset-0 bg-black/0 hover:bg-black/40 transition-all duration-200 
+                          flex items-center justify-center opacity-0 group-hover:opacity-100"
+              >
+                <div className="flex items-center gap-2 text-white">
+                  <i className="bi bi-arrows-angle-expand text-xl"></i>
+                  <span>Click to expand</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // Update the App component to track video state
+      function App() {
+        const [isPipMode, setIsPipMode] = React.useState(false);
+        const [currentVideo, setCurrentVideo] =
+          React.useState(currentVideoData);
+        const [videoState, setVideoState] = React.useState({
+          isPlaying: false,
+          currentTime: 0,
+        });
+        const videoStateRef = React.useRef(null);
+
+        // Handle video state changes
+        const handleVideoStateChange = (event) => {
+          const newState = {
+            isPlaying: event.data === YT.PlayerState.PLAYING,
+            currentTime: videoStateRef.current?.getCurrentTime() || 0,
+          };
+          setVideoState(newState);
+        };
+
+        // Handle PIP mode toggle
+        const handlePipClick = () => {
+          // Save current video state before switching to PIP
+          if (videoStateRef.current) {
+            setVideoState({
+              isPlaying:
+                videoStateRef.current.getPlayerState() ===
+                YT.PlayerState.PLAYING,
+              currentTime: videoStateRef.current.getCurrentTime() || 0,
+            });
+          }
+          setIsPipMode(true);
+        };
+
+        const handleExitPip = () => {
+          setIsPipMode(false);
+          // Optional: Add any additional state cleanup or transitions here
+        };
+
+        return (
+          <div className="grid grid-cols-[1fr_320px] h-screen">
+            <main className="relative h-screen flex flex-col overflow-hidden">
+              {isPipMode ? (
+                // PIP mode content
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  <Header />
+                  {/* Current Video Note-taking component */}
+                  <NoteTaking
+                    currentTime={videoState.currentTime}
+                    videoId={currentVideo.id}
+                  />
+
+                  {/* Metadata Cards List */}
+                  <div className="flex-1 overflow-y-auto">
+                    <div className="p-6 space-y-4">
+                      {metadataList.map((metadata, index) => (
+                        <div
+                          key={index}
+                          className="bg-neutral-700/30 rounded-xl p-4 hover:bg-neutral-700/50 transition-all duration-200 cursor-pointer group animate-fadeIn"
+                          style={{ animationDelay: `${index * 50}ms` }}
+                        >
+                          {/* Timestamp */}
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-primary-400 font-medium">
+                              {metadata.timestamp}
+                            </span>
+                            <button className="opacity-0 group-hover:opacity-100 transition-opacity text-neutral-400 hover:text-white">
+                              <i className="bi bi-pencil"></i>
+                            </button>
+                          </div>
+
+                          {/* Title */}
+                          <h3 className="text-lg font-medium mb-2 group-hover:text-primary-400 transition-colors">
+                            {metadata.title}
+                          </h3>
+
+                          {/* Notes */}
+                          <p className="text-neutral-300 text-sm mb-3">
+                            {metadata.notes}
+                          </p>
+
+                          {/* Tags */}
+                          <div className="flex flex-wrap gap-2">
+                            {metadata.tags.map((tag, tagIndex) => (
+                              <span
+                                key={tagIndex}
+                                className="px-2 py-1 bg-neutral-700/50 rounded-full text-xs text-neutral-300"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // Regular video player
+                <div className="relative flex-1 flex items-center justify-center">
+                  <YouTubePlayer
+                    videoId={currentVideo.id}
+                    className="w-full h-full"
+                    onStateChange={(e) => {
+                      handleVideoStateChange(e);
+                      videoStateRef.current = e.target;
+                    }}
+                    startTime={videoState.currentTime}
+                  />
+                  <div className="absolute right-8 top-1/2 -translate-y-1/2 flex flex-col gap-4">
+                    <button
+                      onClick={handlePipClick}
+                      className="w-12 h-12 rounded-full bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transform transition-all duration-200 hover:scale-110 active:scale-95 hover:bg-black/80"
+                    >
+                      <i className="bi bi-pip text-xl"></i>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Metadata Section */}
+              <div
+                className={`bg-neutral-800 border-t border-neutral-700 
+                                ${isPipMode ? "animate-slideUpFade" : ""}`}
+              >
+                <div className="p-6">
+                  <h2 className="text-2xl font-semibold mb-3">
+                    {currentVideo.title}
+                  </h2>
+                  <div className="flex items-center gap-3 text-neutral-400">
+                    <span>{currentVideo.author}</span>
+                    <span>•</span>
+                    <span>{currentVideo.duration}</span>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {currentVideo.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-neutral-700/50 rounded-full text-sm text-neutral-300"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </main>
+
+            {/* Sidebar */}
+            <aside className="bg-neutral-800 border-l border-neutral-700 overflow-y-auto">
+              {/* Search */}
+              <div className="sticky top-0 p-6 bg-neutral-800 border-b border-neutral-700 z-10">
+                <div className="relative flex items-center bg-neutral-700/50 rounded-xl p-2 focus-within:bg-neutral-700 transition-colors">
+                  <i className="bi bi-search text-neutral-400 mx-2"></i>
+                  <input
+                    type="text"
+                    placeholder="Search videos..."
+                    className="bg-transparent border-none text-sm text-neutral-100 w-full focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Video List */}
+              <div className="p-6 space-y-4">
+                {mediaList.map((video, index) => (
+                  <div
+                    key={index}
+                    onClick={() => setCurrentVideo(video)}
+                    className="group bg-neutral-800/50 rounded-xl p-4 cursor-pointer transform transition-all duration-200 hover:bg-neutral-800 hover:scale-[1.02] animate-fadeIn"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <div className="aspect-video mb-3 bg-neutral-900 rounded-lg overflow-hidden">
+                      <img
+                        src={`https://img.youtube.com/vi/${video.id}/mqdefault.jpg`}
+                        alt={video.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <h3 className="font-medium text-lg mb-2 group-hover:text-primary-400 transition-colors">
+                      {video.title}
+                    </h3>
+                    <div className="flex items-center gap-3 text-sm text-neutral-400">
+                      <span>{video.author}</span>
+                      <span>•</span>
+                      <span>{video.duration}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </aside>
+
+            {/* PIP Video */}
+            {isPipMode && (
+              <PipVideo
+                videoId={currentVideo.id}
+                currentTime={videoState.currentTime}
+                onStateChange={(e) => {
+                  handleVideoStateChange(e);
+                  videoStateRef.current = e.target;
+                }}
+                onExitPip={handleExitPip}
+              />
+            )}
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<App />);
     </script>
   </body>
 </html>
