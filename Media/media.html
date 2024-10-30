@@ -12,7 +12,7 @@
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
- 
+
     <style>
       /* Same base styles */
       * {
@@ -1274,68 +1274,128 @@
           // Add more items as needed
         ];
 
-        // Single PIP button click handler
-        document.querySelector('[data-action="pip"]').addEventListener("click", () => {
-          const mainPlayer = document.querySelector(".video-container");
-          const mainContent = document.querySelector(".main-content");
-          const pipLayout = document.querySelector(".pip-layout");
-          const pipContainer = document.querySelector(".pip-video-container");
-          const videoPlayer = mainPlayer.querySelector('video');
+        function showMetadataCards() {
+          const cardsContainer = document.querySelector(
+            ".metadata-cards-container"
+          );
+          cardsContainer.innerHTML = ""; // Clear existing cards
 
-          if (!mainPlayer || !mainContent || !pipLayout || !pipContainer || !videoPlayer) {
-            console.error("Required elements not found");
-            return;
-          }
+          // First populate current video metadata
+          const currentMetadata = document.querySelector(".current-metadata");
+          currentMetadata.innerHTML = `
+        <h2 class="video-title">${currentVideoData.title}</h2>
+        <div class="video-info">
+            <span class="video-author">${currentVideoData.author}</span>
+            <span class="video-duration">${currentVideoData.duration}</span>
+        </div>
+    `;
 
-          // First, pause any ongoing animations
-          gsap.killTweensOf(mainPlayer);
-          
-          // Calculate position
-          const viewportWidth = window.innerWidth;
-          const sidebarWidth = 320;
-          const pipWidth = 320;
-          const margin = 32;
-          const finalX = viewportWidth - (sidebarWidth + pipWidth + margin);
-          const finalY = window.innerHeight - (180 + margin);
+          // Then animate each card with stagger
+          mediaList.forEach((data, index) => {
+            const card = createMetadataCard(data);
+            card.style.opacity = "0";
+            card.style.transform = "translateY(20px)";
+            cardsContainer.appendChild(card);
 
-          // Simple animation sequence
-          gsap.to(mainPlayer, {
-            scale: 0.3,
-            x: finalX,
-            y: finalY,
-            duration: 0.5,
-            ease: "power2.inOut",
-            onComplete: () => {
-              // Copy video to PIP container
-              const pipVideo = document.createElement('video');
-              pipVideo.src = videoPlayer.src;
-              pipVideo.currentTime = videoPlayer.currentTime;
-              pipVideo.controls = true;
-              pipVideo.autoplay = true;
-              
-              // Clear and append
-              pipContainer.innerHTML = '';
-              pipContainer.appendChild(pipVideo);
-              
-              // Switch displays
-              mainContent.style.display = 'none';
-              pipLayout.style.display = 'block';
-              pipContainer.style.display = 'block';
-              
-              // Reset main player
-              gsap.set(mainPlayer, {
-                clearProps: "all"
-              });
-            }
+            // Stagger the animation of each card
+            gsap.to(card, {
+              opacity: 1,
+              y: 0,
+              duration: 0.5,
+              delay: index * 0.1, // Stagger effect
+              ease: "power2.out",
+            });
           });
-        });
+        }
+
+        // Single PIP button click handler
+        document
+          .querySelector('[data-action="pip"]')
+          .addEventListener("click", () => {
+            const mainPlayer = document.querySelector(".video-container");
+            const mainContent = document.querySelector(".main-content");
+            const pipLayout = document.querySelector(".pip-layout");
+            const pipContainer = document.querySelector(".pip-video-container");
+            const videoPlayer = mainPlayer.querySelector("video");
+
+            if (!mainPlayer || !mainContent || !pipLayout || !pipContainer || !videoPlayer) {
+                console.error("Required elements not found");
+                return;
+            }
+
+            // First, pause any ongoing animations
+            gsap.killTweensOf(mainPlayer);
+
+            // Calculate position
+            const viewportWidth = window.innerWidth;
+            const sidebarWidth = 320;
+            const pipWidth = 320;
+            const margin = 32;
+            const finalX = viewportWidth - (sidebarWidth + pipWidth + margin);
+            const finalY = window.innerHeight - (180 + margin);
+
+            // Simple animation sequence
+            gsap.to(mainPlayer, {
+                scale: 0.3,
+                x: finalX,
+                y: finalY,
+                duration: 0.5,
+                ease: "power2.inOut",
+                onComplete: () => {
+                    // First pause and remove the original video
+                    videoPlayer.pause();
+                    videoPlayer.remove();
+
+                    // Copy video to PIP container
+                    const pipVideo = document.createElement("video");
+                    const currentSource = videoPlayer.querySelector('source');
+                    if (currentSource) {
+                        pipVideo.innerHTML = `<source src="${currentSource.src}" type="${currentSource.type}">`;
+                    } else {
+                        pipVideo.src = videoPlayer.currentSrc || videoPlayer.src;
+                    }
+                    pipVideo.currentTime = videoPlayer.currentTime;
+                    pipVideo.controls = true;
+                    pipVideo.autoplay = true;
+                    pipVideo.muted = videoPlayer.muted;
+                    pipVideo.volume = videoPlayer.volume;
+                    
+                    // Add event listeners for play/pause sync
+                    pipVideo.addEventListener('play', () => {
+                        if (videoPlayer) videoPlayer.pause();
+                    });
+                    
+                    pipVideo.addEventListener('pause', () => {
+                        if (videoPlayer) videoPlayer.pause();
+                    });
+
+                    // Clear and append
+                    pipContainer.innerHTML = "";
+                    pipContainer.appendChild(pipVideo);
+
+                    // Switch displays
+                    mainContent.style.display = "none";
+                    pipLayout.style.display = "block";
+                    pipContainer.style.display = "block";
+
+                    showMetadataCards();
+
+                    // Reset main player without the video
+                    gsap.set(mainPlayer, {
+                        clearProps: "all",
+                    });
+                },
+            });
+          });
 
         // Remove or simplify hover animations that might cause flickering
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener("DOMContentLoaded", () => {
           // Simplify control button interactions
-          document.querySelectorAll(".control-btn, .action-btn").forEach(btn => {
-            btn.classList.add('hover-ready');
-          });
+          document
+            .querySelectorAll(".control-btn, .action-btn")
+            .forEach((btn) => {
+              btn.classList.add("hover-ready");
+            });
         });
       });
 
