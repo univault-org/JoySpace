@@ -281,6 +281,12 @@
             setIsDark(savedTheme === "dark");
           }
         }, []);
+        React.useEffect(() => {
+          // Remove previous theme class
+          document.body.classList.remove("bg-neutral-900", "bg-white");
+          // Add new theme class
+          document.body.classList.add(isDark ? "bg-neutral-900" : "bg-white");
+        }, [isDark]);
 
         return (
           <ThemeContext.Provider value={{ isDark, toggleTheme, theme }}>
@@ -317,7 +323,7 @@
                   }`}
               >
                 {" "}
-               Joy
+                Joy
               </span>
               {/* Space with theme-aware color and subtle highlight */}
               <span
@@ -1222,83 +1228,98 @@
           setIsPipMode(false);
           // Optional: Add any additional state cleanup or transitions here
         };
+        console.log(isDark, 12334);
+        return (
+          <div
+            className={`grid grid-cols-[1fr_auto] h-screen ${
+              isDark ? "bg-neutral-900" : "bg-neutral-100"
+            }`}
+          >
+            <main
+              className={`relative h-screen flex flex-col overflow-hidden ${activeTheme.bg}`}
+            >
+              {isPipMode ? (
+                // PIP mode content
+                <div
+                  className={`flex-1 flex flex-col overflow-hidden ${
+                    isDark ? "bg-neutral-900" : "bg-neutral-100"
+                  }`}
+                >
+                  <Header />
+                  <NoteTaking
+                    currentTime={videoState.currentTime}
+                    videoId={currentVideo.id}
+                  />
+                  {/** <MetadataCardList mediaList={mediaList} /> */}
+                </div>
+              ) : (
+                // Regular video player - unchanged
+                <div className="relative flex-1 flex items-center justify-center">
+                  <YouTubePlayer
+                    videoId={currentVideo.id}
+                    className="w-full h-full"
+                    onStateChange={(e) => {
+                      handleVideoStateChange(e);
+                      videoStateRef.current = e.target;
+                    }}
+                    startTime={videoState.currentTime}
+                  />
+                  <div className="absolute right-8 top-1/2 -translate-y-1/2 flex flex-col gap-4">
+                    <button
+                      onClick={handlePipClick}
+                      className="w-12 h-12 rounded-full bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transform transition-all duration-200 hover:scale-110 active:scale-95 hover:bg-black/80"
+                    >
+                      <i className="bi bi-pip text-xl"></i>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Metadata Section */}
+              <CurrentVideoMetadata
+                currentVideo={currentVideo}
+                isPipMode={isPipMode}
+              />
+            </main>
+
+            {/* Right side Bookmark List - unchanged */}
+            <div className="h-screen">
+              <BookmarkList
+                currentVideo={currentVideo}
+                setCurrentVideo={(video) => {
+                  setCurrentVideo(video);
+                  if (isPipMode) setIsPipMode(false);
+                }}
+                mediaList={mediaList}
+              />
+            </div>
+
+            {/* PIP Video - unchanged */}
+            {isPipMode && (
+              <PipVideo
+                videoId={currentVideo.id}
+                currentTime={videoState.currentTime}
+                onStateChange={(e) => {
+                  handleVideoStateChange(e);
+                  videoStateRef.current = e.target;
+                }}
+                onExitPip={handleExitPip}
+              />
+            )}
+          </div>
+        );
+      }
+
+      function Root() {
         return (
           <ThemeProvider>
-            <div className="grid grid-cols-[1fr_auto] h-screen">
-              <main
-                className={`relative h-screen flex flex-col overflow-hidden ${activeTheme.bg}`}
-              >
-                {isPipMode ? (
-                  // PIP mode content
-                  <div className="flex-1 flex flex-col overflow-hidden">
-                    <Header />
-                    <NoteTaking
-                      currentTime={videoState.currentTime}
-                      videoId={currentVideo.id}
-                    />
-                    <MetadataCardList mediaList={mediaList} />
-                  </div>
-                ) : (
-                  // Regular video player - unchanged
-                  <div className="relative flex-1 flex items-center justify-center">
-                    <YouTubePlayer
-                      videoId={currentVideo.id}
-                      className="w-full h-full"
-                      onStateChange={(e) => {
-                        handleVideoStateChange(e);
-                        videoStateRef.current = e.target;
-                      }}
-                      startTime={videoState.currentTime}
-                    />
-                    <div className="absolute right-8 top-1/2 -translate-y-1/2 flex flex-col gap-4">
-                      <button
-                        onClick={handlePipClick}
-                        className="w-12 h-12 rounded-full bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transform transition-all duration-200 hover:scale-110 active:scale-95 hover:bg-black/80"
-                      >
-                        <i className="bi bi-pip text-xl"></i>
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Metadata Section */}
-                <CurrentVideoMetadata
-                  currentVideo={currentVideo}
-                  isPipMode={isPipMode}
-                />
-              </main>
-
-              {/* Right side Bookmark List - unchanged */}
-              <div className="h-screen">
-                <BookmarkList
-                  currentVideo={currentVideo}
-                  setCurrentVideo={(video) => {
-                    setCurrentVideo(video);
-                    if (isPipMode) setIsPipMode(false);
-                  }}
-                  mediaList={mediaList}
-                />
-              </div>
-
-              {/* PIP Video - unchanged */}
-              {isPipMode && (
-                <PipVideo
-                  videoId={currentVideo.id}
-                  currentTime={videoState.currentTime}
-                  onStateChange={(e) => {
-                    handleVideoStateChange(e);
-                    videoStateRef.current = e.target;
-                  }}
-                  onExitPip={handleExitPip}
-                />
-              )}
-            </div>
+            <App />
           </ThemeProvider>
         );
       }
 
       const root = ReactDOM.createRoot(document.getElementById("root"));
-      root.render(<App />);
+      root.render(<Root />);
     </script>
   </body>
 </html>
