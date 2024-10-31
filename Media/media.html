@@ -119,8 +119,7 @@
         ],
       };
 
-      // Add this metadata list near your other constants
-      const mediaList = [
+      const mediaListData = [
         {
           id: "dQw4w9WgXcQ",
           title: "Never Gonna Give You Up",
@@ -219,6 +218,38 @@
           isBookmarked: true,
         },
       ];
+
+      // Format duration from seconds to MM:SS or HH:MM:SS
+      function formatDuration(seconds) {
+        if (!seconds) return "00:00";
+
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const remainingSeconds = Math.floor(seconds % 60);
+
+        // If video is longer than an hour, include hours
+        if (hours > 0) {
+          return `${hours}:${minutes
+            .toString()
+            .padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
+        }
+
+        // Otherwise just show minutes and seconds
+        return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+      }
+
+      // Format file size from bytes to human readable format
+      function formatSize(bytes) {
+        if (!bytes) return "0 B";
+
+        const sizes = ["B", "KB", "MB", "GB", "TB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+
+        // Round to 1 decimal place
+        const size = (bytes / Math.pow(1024, i)).toFixed(1);
+
+        return `${size} ${sizes[i]}`;
+      }
 
       // Define ThemeContext outside the component
       const ThemeContext = React.createContext({
@@ -332,13 +363,13 @@
               >
                 Space
                 <span
-                  className="absolute -bottom-0.5 left-0 w-full h-0.5 
+                  className="absolute -bottom-0.5 left-0 w-full h-0.5
                                    bg-primary-400/30 rounded-full"
                 ></span>
               </span>
               {/* Media in YouTube red with hover effect */}
               <span
-                className="text-sm ml-2 font-medium text-[#FF0000] 
+                className="text-sm ml-2 font-medium text-[#FF0000]
                                hover:text-[#FF0000]/80 transition-colors"
               >
                 Media
@@ -392,172 +423,413 @@
         );
       }
 
-      function Header() {
-        const [isInputFocused, setIsInputFocused] = React.useState(false);
-        const [bookmarkUrl, setBookmarkUrl] = React.useState("");
-        const inputRef = React.useRef(null);
-        const fileInputRef = React.useRef(null);
+      function Header({ onJoyganize }) {
         const { isDark, theme } = React.useContext(ThemeContext);
         const activeTheme = isDark ? theme.dark : theme.light;
+        const fileInputRef = React.useRef(null);
+        const [isProcessing, setIsProcessing] = React.useState(false);
+        const [progress, setProgress] = React.useState(0);
+        const [showReviewModal, setShowReviewModal] = React.useState(false);
+        const [processedResults, setProcessedResults] = React.useState(null);
 
+        const handleVideoSelect = async (e) => {
+          const files = Array.from(e.target.files).filter((file) =>
+            file.type.startsWith("video/")
+          );
+
+          console.log("Selected files:", files);
+
+          if (files.length === 0) {
+            alert("Please select video files");
+            return;
+          }
+
+          setIsProcessing(true);
+          const results = {
+            success: [],
+            errors: [],
+          };
+
+          try {
+            // Process each file
+            for (let i = 0; i < files.length; i++) {
+              const file = files[i];
+              try {
+                console.log(`Processing ${file.name}...`);
+
+                // Get metadata
+                const metadata = await extractVideoMetadata(file);
+                console.log("Metadata:", metadata);
+
+                // Generate thumbnail
+                const thumbnail = await generateEfficientThumbnail(
+                  file,
+                  metadata
+                );
+                console.log("Thumbnail generated");
+
+                // Create entry
+                const videoEntry = {
+                  id: Date.now().toString(),
+                  title: file.name,
+                  path: `./videos/${file.name}`,
+                  thumbnailPath: `./thumbnails/${file.name.replace(
+                    /\.[^/.]+$/,
+                    ""
+                  )}_thumb.jpg`,
+                  duration: metadata.duration,
+                  size: metadata.size,
+                  created: metadata.lastModified,
+                  thumbnail: thumbnail,
+                  tags: [],
+                  notes: "",
+                };
+
+                results.success.push(videoEntry);
+
+                // Update progress
+                const currentProgress = ((i + 1) / files.length) * 100;
+                setProgress(currentProgress);
+              } catch (error) {
+                console.error(`Error processing ${file.name}:`, error);
+                results.errors.push({
+                  file: file.name,
+                  error: error.message,
+                });
+              }
+            }
+
+            setProcessedResults(results);
+            setShowReviewModal(true);
+          } catch (error) {
+            console.error("Joyganize failed:", error);
+            alert("Failed to process videos. Please try again.");
+          } finally {
+            setIsProcessing(false);
+            setProgress(0);
+            fileInputRef.current.value = "";
+          }
+        };
+
+        const handleSaveCollection = async (entries) => {
+          try {
+            // Pass the final results to parent
+            await onJoyganize({
+              success: entries,
+              errors: processedResults.errors,
+            });
+
+            // Close modal
+            setShowReviewModal(false);
+            setProcessedResults(null);
+          } catch (error) {
+            console.error("Failed to save collection:", error);
+            alert("Failed to save collection. Please try again.");
+          }
+        };
+
+        // Add keyboard shortcut
         React.useEffect(() => {
           const handleKeyDown = (e) => {
-            if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+            if ((e.metaKey || e.ctrlKey) && e.key === "j") {
               e.preventDefault();
-              inputRef.current?.focus();
+              fileInputRef.current?.click();
             }
           };
+
           window.addEventListener("keydown", handleKeyDown);
           return () => window.removeEventListener("keydown", handleKeyDown);
         }, []);
 
         return (
-          <header
-            className={`sticky top-0 z-50 backdrop-blur-md border-b ${
-              activeTheme.border
-            }
-                          ${isDark ? "bg-neutral-800/80" : "bg-white/90"}`}
-          >
-            <div className="px-6 h-16 flex items-center justify-between gap-4">
-              {/* Brand */}
-              <Logo />
-
-              {/* Bookmark Input Group */}
-              <div
-                className={`flex items-center gap-3 transition-all duration-300 
-                                ${
-                                  isInputFocused ? "flex-1 max-w-2xl" : "w-80"
-                                }`}
-              >
-                {/* URL Input */}
-                <div
-                  className={`flex-1 relative transition-all duration-300 
-                                   ${isInputFocused ? "scale-[1.02]" : ""}`}
-                >
-                  <div
-                    className={`absolute inset-0 rounded-xl transition-all duration-300
-                                       ${
-                                         isDark
-                                           ? "bg-neutral-700/30"
-                                           : "bg-neutral-200/50"
-                                       }
-                                       ${
-                                         isInputFocused
-                                           ? "blur-xl opacity-50"
-                                           : "blur-none opacity-0"
-                                       }`}
-                  ></div>
-
-                  <div
-                    className={`relative flex items-center rounded-xl transition-all duration-300
-                                       ${
-                                         isDark
-                                           ? "bg-neutral-700/50 focus-within:bg-neutral-700"
-                                           : "bg-neutral-100 focus-within:bg-white"
-                                       }
-                                       ${
-                                         isInputFocused
-                                           ? "ring-2 ring-primary-500/50"
-                                           : ""
-                                       }`}
-                  >
-                    <div
-                      className={`pl-4 transition-colors duration-300 
-                                          ${
-                                            isInputFocused
-                                              ? "text-primary-400"
-                                              : activeTheme.textMuted
-                                          }`}
-                    >
-                      <i className="bi bi-link-45deg text-lg"></i>
-                    </div>
-
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={bookmarkUrl}
-                      onChange={(e) => setBookmarkUrl(e.target.value)}
-                      onFocus={() => setIsInputFocused(true)}
-                      onBlur={() => setIsInputFocused(false)}
-                      placeholder="Add video URL..."
-                      className={`flex-1 px-4 py-2.5 bg-transparent text-sm 
-                                          ${activeTheme.text} placeholder:${activeTheme.textMuted} 
-                                          focus:outline-none`}
-                    />
-
-                    {/* Keyboard Shortcut */}
-                    <div
-                      className={`px-4 flex items-center gap-1 text-xs transition-opacity duration-300
-                                           ${
-                                             isInputFocused
-                                               ? "opacity-0"
-                                               : "opacity-100"
-                                           } 
-                                           ${bookmarkUrl ? "hidden" : ""}`}
-                    >
-                      <kbd
-                        className={`px-1.5 py-0.5 rounded-md
-                                              ${
-                                                isDark
-                                                  ? "bg-neutral-700"
-                                                  : "bg-neutral-200"
-                                              }`}
-                      >
-                        ⌘K
-                      </kbd>
-                    </div>
-                  </div>
+          <>
+            <header
+              className={`sticky top-0 z-50 backdrop-blur-md border-b ${
+                activeTheme.border
+              }
+                ${isDark ? "bg-neutral-800/80" : "bg-white/90"}`}
+            >
+              <div className="px-6 h-16 flex items-center justify-between">
+                {/* Brand */}
+                <div className="flex items-center gap-3">
+                  <Logo />
+                  <div className={`h-6 w-px ${activeTheme.border}`}></div>
                 </div>
 
-                {/* File Upload Button */}
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`flex-shrink-0 h-10 px-4 rounded-xl transition-all duration-300
-                                  ${
-                                    isDark
-                                      ? "bg-neutral-700/50 hover:bg-neutral-700"
-                                      : "bg-neutral-100 hover:bg-neutral-200"
-                                  }
-                                  hover:ring-2 hover:ring-primary-500/50 flex items-center gap-2
-                                  ${
-                                    isInputFocused
-                                      ? "opacity-100"
-                                      : "opacity-0 w-0 px-0 overflow-hidden"
-                                  }`}
-                >
+                {/* Main Actions */}
+                <div className="flex items-center gap-4">
+                  {/* Joyganize Button */}
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isProcessing}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl
+                                transition-all duration-300 hover:ring-2 hover:ring-primary-500/50
+                                ${
+                                  isProcessing
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : ""
+                                }
+                                ${
+                                  isDark
+                                    ? "bg-neutral-700/50 hover:bg-neutral-700"
+                                    : "bg-neutral-100 hover:bg-neutral-200"
+                                }`}
+                  >
+                    {isProcessing ? (
+                      <i className="bi bi-arrow-repeat animate-spin text-primary-500"></i>
+                    ) : (
+                      <i className="bi bi-magic text-primary-500"></i>
+                    )}
+                    <span className={`text-sm font-medium ${activeTheme.text}`}>
+                      {isProcessing ? "Processing..." : "Joyganize Videos"}
+                    </span>
+                    {!isProcessing && (
+                      <kbd
+                        className={`ml-2 px-1.5 py-0.5 text-xs rounded-md
+                                    ${
+                                      isDark
+                                        ? "bg-neutral-700"
+                                        : "bg-neutral-200"
+                                    }`}
+                      >
+                        ⌘J
+                      </kbd>
+                    )}
+                  </button>
+
+                  {/* Hidden File Input */}
                   <input
                     ref={fileInputRef}
                     type="file"
                     accept="video/*"
+                    multiple
                     className="hidden"
+                    onChange={handleVideoSelect}
                   />
-                  <i
-                    className={`bi bi-file-earmark-play ${activeTheme.textMuted}`}
-                  ></i>
-                  <span className={activeTheme.textMuted}>Choose File</span>
-                </button>
+
+                  {/* Secondary Actions */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      className={`flex items-center gap-2 px-3 py-2
+                                transition-colors ${activeTheme.textMuted} hover:text-primary-500`}
+                    >
+                      <i className="bi bi-collection"></i>
+                      <span className="text-sm">Collections</span>
+                    </button>
+
+                    <button
+                      className={`flex items-center gap-2 px-3 py-2
+                                transition-colors ${activeTheme.textMuted} hover:text-primary-500`}
+                    >
+                      <i className="bi bi-gear"></i>
+                      <span className="text-sm">Settings</span>
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex items-center gap-3">
-                <button
-                  className={`flex items-center gap-2 px-3 py-2 transition-colors
-                                      ${activeTheme.textMuted} hover:text-primary-500`}
+              {/* Processing Status Bar */}
+              {isProcessing && (
+                <div
+                  className={`px-6 py-2 ${activeTheme.border} border-t
+                        flex items-center justify-between`}
                 >
-                  <i className="bi bi-clock"></i>
-                  <span className="text-sm">Recent</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-primary-500">
+                      Joyganizing videos...
+                    </span>
+                    <span className="text-xs text-neutral-500">
+                      {Math.round(progress)}%
+                    </span>
+                  </div>
+                  <div className="w-48 h-1 bg-neutral-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary-500 transition-all duration-300"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </header>
+            {/* Review Modal */}
+            {showReviewModal && processedResults && (
+              <JoyganizeReviewModal
+                results={processedResults}
+                onSave={handleSaveCollection}
+                onCancel={() => {
+                  setShowReviewModal(false);
+                  setProcessedResults(null);
+                }}
+              />
+            )}
+          </>
+        );
+      }
+
+      function JoyganizeReviewModal({ results, onSave, onCancel }) {
+        const { isDark, theme } = React.useContext(ThemeContext);
+        const activeTheme = isDark ? theme.dark : theme.light;
+        const [entries, setEntries] = React.useState(() =>
+          results.success.map((entry) => ({
+            ...entry,
+            // Ensure thumbnail is treated as base64
+            thumbnailUrl: entry.thumbnail.startsWith("data:image/")
+              ? entry.thumbnail
+              : null,
+          }))
+        );
+
+        return (
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 
+            flex items-center justify-center"
+          >
+            <div
+              className={`w-[900px] max-h-[80vh] rounded-2xl shadow-xl 
+                ${isDark ? "bg-neutral-800" : "bg-white"}`}
+            >
+              {/* Header */}
+              <div className="p-6 border-b border-neutral-200">
+                <div className="flex items-center justify-between">
+                  <h2 className={`text-xl font-semibold ${activeTheme.text}`}>
+                    Review Before Saving
+                  </h2>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className={activeTheme.textMuted}>
+                      {entries.length} videos ready
+                    </span>
+                    {results.errors.length > 0 && (
+                      <span className="text-red-500">
+                        • {results.errors.length} failed
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+                {/* Success Items */}
+                <div className="grid grid-cols-2 gap-4">
+                  {entries.map((entry, index) => (
+                    <div
+                      key={entry.id}
+                      className={`p-4 rounded-xl
+                                ${
+                                  isDark ? "bg-neutral-700/50" : "bg-neutral-50"
+                                }`}
+                    >
+                      {/* Thumbnail & Basic Info */}
+                      <div className="flex gap-4">
+                        <div className="w-40 h-24 rounded-lg overflow-hidden bg-neutral-100">
+                          {entry.thumbnailUrl ? (
+                            <img
+                              src={entry.thumbnailUrl}
+                              alt={entry.title}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                console.error(
+                                  "Thumbnail load failed:",
+                                  entry.title
+                                );
+                                e.target.src =
+                                  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="; // 1x1 transparent PNG
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-neutral-400">
+                              <i className="bi bi-image text-2xl"></i>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={entry.title}
+                            onChange={(e) => {
+                              const newEntries = [...entries];
+                              newEntries[index].title = e.target.value;
+                              setEntries(newEntries);
+                            }}
+                            className="w-full px-2 py-1 rounded bg-transparent 
+                                                border border-neutral-500"
+                          />
+                          <div className="mt-2 text-sm text-neutral-500">
+                            {formatDuration(entry.duration)} •{" "}
+                            {formatSize(entry.size)}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tags 
+                      <div className="mt-3">
+                        <TagInput
+                          tags={entry.tags}
+                          onChange={(tags) => {
+                            const newEntries = [...entries];
+                            newEntries[index].tags = tags;
+                            setEntries(newEntries);
+                          }}
+                        />
+                      </div>*/}
+
+                      {/* Notes */}
+                      <textarea
+                        value={entry.notes}
+                        onChange={(e) => {
+                          const newEntries = [...entries];
+                          newEntries[index].notes = e.target.value;
+                          setEntries(newEntries);
+                        }}
+                        placeholder="Add notes..."
+                        className="mt-3 w-full px-2 py-1 rounded bg-transparent 
+                                        border border-neutral-500 text-sm"
+                        rows={2}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Errors Section */}
+                {results.errors.length > 0 && (
+                  <div className="mt-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20">
+                    <h3 className="text-red-500 font-medium">
+                      Failed to Process
+                    </h3>
+                    <ul className="mt-2 space-y-1">
+                      {results.errors.map((error, index) => (
+                        <li key={index} className="text-sm text-red-500/80">
+                          {error.file}: {error.error}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer Actions */}
+              <div className="p-6 border-t border-neutral-200 flex justify-end gap-3">
+                <button
+                  onClick={onCancel}
+                  className={`px-4 py-2 rounded-lg
+                            ${
+                              isDark
+                                ? "hover:bg-neutral-700"
+                                : "hover:bg-neutral-100"
+                            }`}
+                >
+                  Cancel
                 </button>
-                <div className={`w-px h-6 ${activeTheme.border}`}></div>
                 <button
-                  className="flex items-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 
-                                     text-neutral-900 rounded-lg transition-colors"
+                  onClick={() => onSave(entries)}
+                  className="px-4 py-2 rounded-lg bg-primary-500 
+                            hover:bg-primary-600 text-white"
                 >
-                  <i className="bi bi-share"></i>
-                  <span className="text-sm font-medium">Share</span>
+                  Save Collection
                 </button>
               </div>
             </div>
-          </header>
+          </div>
         );
       }
 
@@ -574,7 +846,7 @@
         };
 
         const handleSaveNote = () => {
-          // Add your save logic here
+         
           console.log("Saving note:", {
             noteText,
             timestamp: currentTime,
@@ -614,7 +886,7 @@
                       isDark
                         ? "hover:bg-neutral-700/50"
                         : "hover:bg-neutral-200"
-                    } 
+                    }
                                          rounded-lg transition-colors ${
                                            activeTheme.textMuted
                                          } hover:text-primary-500`}
@@ -626,7 +898,7 @@
                       isDark
                         ? "hover:bg-neutral-700/50"
                         : "hover:bg-neutral-200"
-                    } 
+                    }
                                          rounded-lg transition-colors ${
                                            activeTheme.textMuted
                                          } hover:text-primary-500`}
@@ -666,7 +938,7 @@
                         isDark
                           ? "hover:bg-neutral-700/50"
                           : "hover:bg-neutral-200"
-                      } 
+                      }
                                              rounded-lg transition-colors ${
                                                activeTheme.textMuted
                                              } hover:text-primary-500`}
@@ -788,8 +1060,11 @@
               {/* Main Video */}
               <div
                 className={`w-80 h-48 rounded-xl overflow-hidden shadow-lg
-                                ${isDark ? "bg-neutral-800" : "bg-neutral-100"}
-                                ${isDark ? "shadow-black/20" : "shadow-xl"}`}
+                                ${
+                                  isDark
+                                    ? "bg-neutral-800 shadow-black/20"
+                                    : "bg-neutral-100 shadow-xl"
+                                }`}
               >
                 <YouTubePlayer
                   videoId={videoId}
@@ -799,10 +1074,13 @@
                 />
               </div>
 
-              {/* Hover Overlay with Expand Text */}
+              {/* Hover Overlay with Expand Text - Only top half */}
               <div
-                className="absolute inset-0 bg-black/0 hover:bg-black/40 transition-all duration-200
-                               flex items-center justify-center opacity-0 group-hover:opacity-100"
+                className="absolute inset-x-0 top-0 h-[50%]
+                               bg-black/0 hover:bg-black/40
+                               transition-all duration-200
+                               flex items-center justify-center
+                               opacity-0 group-hover:opacity-100"
               >
                 <div className="flex items-center gap-2 text-white">
                   <i className="bi bi-arrows-angle-expand text-xl"></i>
@@ -819,7 +1097,12 @@
         const [expandedNotes, setExpandedNotes] = React.useState(null);
         const { isDark, toggleTheme, theme } = React.useContext(ThemeContext);
         const activeTheme = isDark ? theme.dark : theme.light;
+        console.log("BookmarkList rendering with mediaList:", mediaList);
 
+        // Helper function to get last watched time
+        const formatLastWatched = (date) => {
+          return date ? "Just now" : "Never"; // We can improve this later
+        };
         return (
           <aside
             className={`${activeTheme.sidebar} ${
@@ -851,7 +1134,7 @@
                               isDark
                                 ? "bg-neutral-700/50 hover:bg-neutral-700"
                                 : "bg-neutral-200 hover:bg-neutral-300"
-                            } 
+                            }
                             rounded-lg transition-all duration-200`}
                     >
                       <i
@@ -929,7 +1212,7 @@
             {/* Video List */}
             <div className={`p-6 ${isFullScreen ? "max-w-6xl mx-auto" : ""}`}>
               <div className="space-y-4">
-                {mediaList.map((video, index) => (
+                {mediaListData.map((video, index) => (
                   <div
                     key={index}
                     className={`group rounded-xl overflow-hidden transition-all duration-200 animate-fadeIn
@@ -961,11 +1244,15 @@
                           />
                           {/* Duration Badge */}
                           <div
-                            className={`absolute bottom-1.5 right-1.5 px-1.5 py-0.5 
-                            ${isFullScreen ? "text-xs" : "text-[10px]"}
-                            font-medium bg-black/80 text-white rounded`}
+                            className={`absolute bottom-1.5 right-1.5 px-1.5 py-0.5
+                                            ${
+                                              isFullScreen
+                                                ? "text-xs"
+                                                : "text-[10px]"
+                                            }
+                                            font-medium bg-black/80 text-white rounded`}
                           >
-                            {video.duration}
+                            {formatDuration(video.duration)}
                           </div>
                         </div>
 
@@ -982,7 +1269,8 @@
                             </span>
                             <span className="text-[10px] text-neutral-500 flex items-center gap-1">
                               <i className="bi bi-clock"></i>
-                              {video.lastWatched}
+                              {video.lastWatched ||
+                                formatLastWatched(video.date)}
                             </span>
                           </div>
                         </div>
@@ -1034,7 +1322,7 @@
                         </div>
 
                         <div
-                          className={`overflow-hidden transition-all duration-300 
+                          className={`overflow-hidden transition-all duration-300
                                                     ${
                                                       expandedNotes === index
                                                         ? "mt-3 max-h-96"
@@ -1104,7 +1392,7 @@
 
             {/* Title */}
             <h3
-              className={`text-lg font-medium mb-2 group-hover:text-primary-400 
+              className={`text-lg font-medium mb-2 group-hover:text-primary-400
                            transition-colors ${activeTheme.text}`}
             >
               {metadata.title}
@@ -1199,6 +1487,25 @@
           currentTime: 0,
         });
         const videoStateRef = React.useRef(null);
+        const [mediaList, setMediaList] = React.useState(() => {
+          // Try to load from localStorage first
+          const saved = localStorage.getItem("mediaBookmarks");
+          if (saved) {
+            try {
+              return JSON.parse(saved);
+            } catch (e) {
+              console.error("Error loading saved bookmarks:", e);
+            }
+          }
+          // Fall back to mediaListData if no saved data
+          return [...mediaListData];
+        });
+
+        React.useEffect(() => {
+          // Optional: Save to localStorage
+          localStorage.setItem("mediaBookmarks", JSON.stringify(mediaList));
+        }, [mediaList]);
+
         const { isDark, theme } = React.useContext(ThemeContext);
         const activeTheme = isDark ? theme.dark : theme.light;
         // Handle video state changes
@@ -1209,6 +1516,18 @@
           };
           setVideoState(newState);
         };
+        // Add new bookmarked video to mediaList
+        const handleAddVideo = (newVideo) => {
+          console.log("handleAddVideo called with:", newVideo);
+          setMediaList((prevList) => {
+            console.log("Previous list:", prevList);
+            const newList = [newVideo, ...prevList];
+            console.log("New list:", newList);
+            return newList;
+          });
+        };
+
+        console.log("App render - current mediaList:", mediaList);
 
         // Handle PIP mode toggle
         const handlePipClick = () => {
@@ -1228,7 +1547,6 @@
           setIsPipMode(false);
           // Optional: Add any additional state cleanup or transitions here
         };
-        console.log(isDark, 12334);
         return (
           <div
             className={`grid grid-cols-[1fr_auto] h-screen ${
@@ -1245,7 +1563,7 @@
                     isDark ? "bg-neutral-900" : "bg-neutral-100"
                   }`}
                 >
-                  <Header />
+                  <Header onJoyganize={handleAddVideo} />
                   <NoteTaking
                     currentTime={videoState.currentTime}
                     videoId={currentVideo.id}
@@ -1253,26 +1571,28 @@
                   {/** <MetadataCardList mediaList={mediaList} /> */}
                 </div>
               ) : (
-                // Regular video player - unchanged
-                <div className="relative flex-1 flex items-center justify-center">
-                  <YouTubePlayer
-                    videoId={currentVideo.id}
-                    className="w-full h-full"
-                    onStateChange={(e) => {
-                      handleVideoStateChange(e);
-                      videoStateRef.current = e.target;
-                    }}
-                    startTime={videoState.currentTime}
-                  />
-                  <div className="absolute right-8 top-1/2 -translate-y-1/2 flex flex-col gap-4">
-                    <button
-                      onClick={handlePipClick}
-                      className="w-12 h-12 rounded-full bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transform transition-all duration-200 hover:scale-110 active:scale-95 hover:bg-black/80"
-                    >
-                      <i className="bi bi-pip text-xl"></i>
-                    </button>
+                <>
+                  <Header onJoyganize={handleAddVideo} />
+                  <div className="relative flex-1 flex items-center justify-center">
+                    <YouTubePlayer
+                      videoId={currentVideo.id}
+                      className="w-full h-full"
+                      onStateChange={(e) => {
+                        handleVideoStateChange(e);
+                        videoStateRef.current = e.target;
+                      }}
+                      startTime={videoState.currentTime}
+                    />
+                    <div className="absolute right-8 top-1/2 -translate-y-1/2 flex flex-col gap-4">
+                      <button
+                        onClick={handlePipClick}
+                        className="w-12 h-12 rounded-full bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transform transition-all duration-200 hover:scale-110 active:scale-95 hover:bg-black/80"
+                      >
+                        <i className="bi bi-pip text-xl"></i>
+                      </button>
+                    </div>
                   </div>
-                </div>
+                </>
               )}
 
               {/* Metadata Section */}
@@ -1285,6 +1605,7 @@
             {/* Right side Bookmark List - unchanged */}
             <div className="h-screen">
               <BookmarkList
+                key={mediaList.length}
                 currentVideo={currentVideo}
                 setCurrentVideo={(video) => {
                   setCurrentVideo(video);
@@ -1306,6 +1627,190 @@
                 onExitPip={handleExitPip}
               />
             )}
+          </div>
+        );
+      }
+
+      // Main handler for Joyganizing videos
+      async function handleJoyganize(files) {
+        const results = [];
+        const errors = [];
+
+        // Progress state
+        const [progress, setProgress] = React.useState(0);
+        const [processing, setProcessing] = React.useState(false);
+
+        try {
+          setProcessing(true);
+
+          for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            try {
+              // Get video metadata first (fast)
+              const metadata = await extractVideoMetadata(file);
+
+              // Generate thumbnail efficiently
+              const thumbnail = await generateEfficientThumbnail(
+                file,
+                metadata
+              );
+
+              // Create entry
+              const videoEntry = {
+                id: Date.now().toString(),
+                title: file.name,
+                path: `./videos/${file.name}`,
+                thumbnailPath: `./thumbnails/${file.name.replace(
+                  /\.[^/.]+$/,
+                  ""
+                )}_thumb.jpg`,
+                duration: metadata.duration,
+                size: metadata.size,
+                created: metadata.lastModified,
+                thumbnail: thumbnail,
+                tags: [],
+                notes: "",
+              };
+
+              results.push(videoEntry);
+              setProgress(((i + 1) / files.length) * 100);
+            } catch (error) {
+              console.error(`Error processing ${file.name}:`, error);
+              errors.push({ file: file.name, error });
+            }
+          }
+
+          return { results, errors };
+        } finally {
+          setProcessing(false);
+        }
+      }
+
+      // Efficient thumbnail generation
+      async function generateEfficientThumbnail(file, metadata) {
+        return new Promise((resolve, reject) => {
+          const video = document.createElement("video");
+          video.preload = "metadata";
+
+          let videoURL = null;
+          let thumbnailGenerated = false;
+          let timeoutId = null;
+
+          const cleanup = () => {
+            if (timeoutId) clearTimeout(timeoutId);
+            if (videoURL) URL.revokeObjectURL(videoURL);
+            if (video) video.remove();
+          };
+
+          const generateThumb = () => {
+            if (thumbnailGenerated) return;
+
+            try {
+              const canvas = document.createElement("canvas");
+              canvas.width = 320;
+              canvas.height = 180;
+
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+              // Convert to base64 string
+              const base64Data = canvas.toDataURL("image/jpeg", 0.7);
+              thumbnailGenerated = true;
+
+              cleanup();
+              canvas.remove();
+
+              resolve(base64Data);
+            } catch (error) {
+              cleanup();
+              reject(
+                new Error(`Thumbnail generation failed: ${error.message}`)
+              );
+            }
+          };
+
+          video.onloadedmetadata = () => {
+            const thumbTime = Math.min(video.duration * 0.01, 10);
+            video.currentTime = thumbTime;
+          };
+
+          video.onseeked = generateThumb;
+
+          video.onerror = (error) => {
+            cleanup();
+            reject(new Error(`Video load failed: ${error.message}`));
+          };
+
+          try {
+            videoURL = URL.createObjectURL(file);
+            video.src = videoURL;
+
+            timeoutId = setTimeout(() => {
+              if (!thumbnailGenerated) {
+                cleanup();
+                reject(new Error("Thumbnail generation timed out"));
+              }
+            }, 30000);
+          } catch (error) {
+            cleanup();
+            reject(new Error(`URL creation failed: ${error.message}`));
+          }
+        });
+      }
+
+      // Fast metadata extraction
+      async function extractVideoMetadata(file) {
+        return new Promise((resolve, reject) => {
+          const video = document.createElement("video");
+          video.preload = "metadata";
+
+          video.onloadedmetadata = () => {
+            const metadata = {
+              duration: video.duration,
+              width: video.videoWidth,
+              height: video.videoHeight,
+              size: file.size,
+              lastModified: new Date(file.lastModified),
+              type: file.type,
+            };
+
+            video.remove();
+            resolve(metadata);
+          };
+
+          video.onerror = () => {
+            video.remove();
+            reject(new Error("Failed to load video metadata"));
+          };
+
+          video.src = URL.createObjectURL(file);
+        });
+      }
+
+      // Progress UI Component
+      function ProcessingProgress({ progress, processing }) {
+        return (
+          <div
+            className={`fixed bottom-4 right-4 p-4 rounded-lg shadow-lg
+            ${isDark ? "bg-neutral-800" : "bg-white"}
+            transition-all duration-300 transform
+            ${
+              processing
+                ? "translate-y-0 opacity-100"
+                : "translate-y-10 opacity-0"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-40 h-2 bg-neutral-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary-500 transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <span className="text-sm text-neutral-500">
+                {Math.round(progress)}%
+              </span>
+            </div>
           </div>
         );
       }
