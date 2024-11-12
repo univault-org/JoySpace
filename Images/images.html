@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Images</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/2.0.3/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f0f0f0;
+      }
+
+      .section {
+        margin-bottom: 40px;
+      }
+
+      .section-title {
+        font-size: 1.5em;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #333;
+        padding-bottom: 10px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(236px, 1fr));
+        gap: 16px;
+      }
+
+      .screenshot-container {
+        break-inside: avoid;
+      }
+
+      .screenshot {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: box-shadow 0.3s ease;
+      }
+
+      .screenshot:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      .screenshot-image-container {
+        position: relative;
+        cursor: pointer;
+      }
+
+      .screenshot img {
+        width: 100%;
+        display: block;
+      }
+
+      .filename {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        background-color: rgba(0, 0, 0, 0.6);
+        color: white;
+        padding: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .screenshot-content {
+        padding: 12px;
+      }
+
+      .description {
+        font-size: 14px;
+        color: #333;
+        margin-bottom: 8px;
+      }
+
+      .tags {
+        font-size: 12px;
+        color: #8e8e8e;
+      }
+
+      .search-container {
+        max-width: 600px;
+        margin: 20px auto;
+        text-align: center;
+      }
+
+      .search-bar {
+        display: flex;
+        border: 1px solid #dfe1e5;
+        border-radius: 24px;
+        padding: 5px;
+        margin-bottom: 20px;
+      }
+
+      .search-bar:hover {
+        box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
+        border-color: rgba(223, 225, 229, 0);
+      }
+
+      #searchInput {
+        flex-grow: 1;
+        border: none;
+        outline: none;
+        font-size: 16px;
+        padding: 10px 15px;
+        border-radius: 24px 0 0 24px;
+      }
+
+      #searchButton {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0 15px;
+        border-radius: 0 24px 24px 0;
+      }
+
+      #searchButton svg {
+        width: 24px;
+        height: 24px;
+        fill: #4285f4;
+      }
+
+      .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .action-buttons button {
+        background-color: #f8f9fa;
+        border: 1px solid #f8f9fa;
+        border-radius: 4px;
+        color: #3c4043;
+        font-family: arial, sans-serif;
+        font-size: 14px;
+        margin: 11px 4px;
+        padding: 0 16px;
+        line-height: 27px;
+        height: 36px;
+        min-width: 54px;
+        text-align: center;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .action-buttons button:hover {
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+        background-color: #f8f9fa;
+        border: 1px solid #dadce0;
+        color: #202124;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .share-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: rgba(255, 255, 255, 0.8);
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        display: none;
+        /* Hide by default */
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.4);
+      }
+
+      .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+      }
+
+      .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      #fileList {
+        margin-bottom: 15px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .file-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .get-file-btn {
+        padding: 5px 10px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        margin-right: 5px;
+      }
+
+      .get-file-btn:disabled {
+        background-color: #ddd;
+        cursor: not-allowed;
+      }
+
+      #zipControls {
+        display: none;
+        margin-top: 20px;
+      }
+
+      .remove-file {
+        cursor: pointer;
+        color: red;
+      }
+
+      #successMessage {
+        display: none;
+        background-color: #4caf50;
+        color: white;
+        text-align: center;
+        padding: 10px;
+        margin-top: 10px;
+      }
+
+      #markdownEditor {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 80%;
+        height: 80%;
+        background: white;
+        z-index: 1000;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      }
+
+      #markdownContent {
+        width: 100%;
+        height: calc(100% - 50px);
+        margin-bottom: 10px;
+      }
+
+      #fileSelectModal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.4);
+      }
+
+      #fileSelectModal .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 50%;
+        text-align: center;
+      }
+
+      #saveConfirmModal {
+        display: none;
+        position: fixed;
+        z-index: 1001;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.4);
+      }
+
+      #saveConfirmModal .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 50%;
+        max-width: 400px;
+        text-align: center;
+      }
+
+      #confirmSaveBtn {
+        margin-top: 20px;
+        padding: 10px 20px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+
+      #downloadUpdatedFile,
+      #finishSaveProcess {
+        margin-top: 20px;
+        padding: 10px 20px;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+
+      #downloadUpdatedFile {
+        background-color: #4caf50;
+        margin-right: 10px;
+      }
+
+      #finishSaveProcess {
+        background-color: #008cba;
+      }
+
+      .full-screen-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #1e1e1e;
+      }
+
+      .vs-code-style {
+        background-color: #1e1e1e;
+        color: #d4d4d4;
+        min-width: 80vw;
+        font-family: "Consolas", "Courier New", monospace;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        border: none;
+      }
+
+      .editor-header {
+        background-color: #2d2d2d;
+        padding: 10px 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .file-name {
+        font-size: 14px;
+        color: #fff;
+      }
+
+      .editor-controls {
+        display: flex;
+        gap: 10px;
+      }
+
+      .editor-btn {
+        background-color: #0e639c;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+
+      .editor-btn:hover {
+        background-color: #1177bb;
+      }
+
+      .editor-body {
+        display: flex;
+        flex-grow: 1;
+        overflow: hidden;
+        height: calc(100% - 40px);
+        /* Subtract the header height */
+      }
+
+      #lineNumbers {
+        padding: 20px 10px;
+        background-color: #1e1e1e;
+        color: #858585;
+        text-align: right;
+        font-size: 14px;
+        line-height: 1.5;
+        overflow-y: hidden;
+        flex-shrink: 0;
+        width: 50px;
+        /* Adjust as needed */
+      }
+
+      #markdownContent {
+        flex-grow: 1;
+        background-color: #1e1e1e;
+        color: #d4d4d4;
+        border: none;
+        padding: 20px;
+        font-size: 14px;
+        line-height: 1.5;
+        resize: none;
+        overflow-y: scroll;
+        width: calc(100% - 70px);
+        /* Subtract the line numbers width and padding */
+        height: 100%;
+        box-sizing: border-box;
+      }
+
+      #markdownContent:focus {
+        outline: none;
+      }
+
+      /* Scrollbar styles to match VS Code */
+      #markdownContent::-webkit-scrollbar {
+        width: 14px;
+      }
+
+      #markdownContent::-webkit-scrollbar-thumb {
+        background-color: #424242;
+        border-radius: 7px;
+        border: 3px solid #1e1e1e;
+      }
+
+      #markdownContent::-webkit-scrollbar-track {
+        background-color: #1e1e1e;
+      }
+
+      .screenshot-image-container:hover .share-button {
+        display: flex;
+      }
+
+      #fileSelectModal .modal-content {
+        text-align: center;
+      }
+
+      #markdownFileInput {
+        margin: 20px 0;
+      }
+
+      #generateNewMarkdownBtn {
+        background-color: #4caf50;
+        border: none;
+        color: white;
+        padding: 15px 32px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 20px 0;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+
+      .full-image-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.9);
+      }
+
+      .full-image-content {
+        margin: 5% auto;
+        padding: 20px;
+        width: 90%;
+        max-width: 1200px;
+        position: relative;
+      }
+
+      .close-full-image {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        width: 32px;
+        height: 32px;
+        background-color: rgba(255, 255, 255, 0.8);
+        border: 2px solid rgba(0, 0, 0, 0.3);
+        border-radius: 50%;
+        font-size: 24px;
+        line-height: 24px;
+        color: #333;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        transition: all 0.2s ease;
+      }
+
+      .close-full-image:hover {
+        background-color: rgba(255, 255, 255, 0.95);
+        border-color: rgba(0, 0, 0, 0.5);
+        transform: scale(1.1);
+      }
+
+      .close-full-image:active {
+        transform: scale(0.95);
+      }
+
+      #fullImage {
+        width: 100%;
+        max-height: 70vh;
+        object-fit: contain;
+      }
+
+      .image-details {
+        color: #f1f1f1;
+        padding: 20px 0;
+      }
+
+      .image-details h2 {
+        margin-top: 0;
+      }
+
+      .image-details p {
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Images</h1>
+    <div class="search-container">
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search images..." />
+        <button id="searchButton">
+          <svg
+            focusable="false"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+            ></path>
+          </svg>
+        </button>
+      </div>
+      <div class="action-buttons">
+        <button id="editMarkdownBtn">Edit Markdown</button>
+        <button id="openShareModalBtn">Open Share Modal</button>
+      </div>
+    </div>
+    <div id="generateMarkdownPrompt" style="display: none">
+      <p>
+        Click the button below to download the markdown file for rendering next
+        time without re-selecting the parent folder:
+      </p>
+      <button id="generateMarkdownBtn">Download Markdown File</button>
+    </div>
+    <div id="screenshotSections"></div>
+
+    <div id="shareModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Share Images</h2>
+        <p>Select the files you want to share:</p>
+        <div id="fileList"></div>
+        <div id="zipControls">
+          <button id="generateZip">ZIP FILES</button>
+        </div>
+        <div id="successMessage"></div>
+      </div>
+    </div>
+
+    <div id="markdownEditor" class="full-screen-modal">
+      <div class="modal-content vs-code-style">
+        <div class="editor-header">
+          <span class="file-name">images.md</span>
+          <div class="editor-controls">
+            <button id="saveMarkdownBtn" class="editor-btn">Save</button>
+            <button id="closeEditorBtn" class="editor-btn">Close</button>
+          </div>
+        </div>
+        <div class="editor-body">
+          <div id="lineNumbers"></div>
+          <textarea id="markdownContent" spellcheck="false"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div id="fileSelectModal" class="modal">
+      <div class="modal-content">
+        <h2>Markdown File Selection</h2>
+        <p>Please select an existing Markdown:</p>
+        <input type="file" id="markdownFileInput" accept=".md" />
+        <!-- <p>Or</p>
+            <button id="generateNewMarkdownBtn">Generate New Markdown File</button> -->
+      </div>
+    </div>
+
+    <div id="saveConfirmModal" class="modal">
+      <div class="modal-content">
+        <h2>Save Changes</h2>
+        <p>
+          Your changes have been saved in memory. To update the file on your
+          system, please follow these steps:
+        </p>
+        <ol>
+          <li>Click the "Download Updated File" button below.</li>
+          <li>
+            Locate your original <code>images.md</code> file on your system.
+          </li>
+          <li>Replace the original file with the newly downloaded file.</li>
+          <li>
+            Rename the new file to match the original filename if necessary.
+          </li>
+        </ol>
+        <button id="downloadUpdatedFile">Download Updated File</button>
+        <button id="finishSaveProcess">I've Replaced the File</button>
+      </div>
+    </div>
+
+    <div id="initialChoiceModal" class="modal">
+      <div class="modal-content">
+        <h2>Images</h2>
+        <p>Choose an option to start:</p>
+        <button id="loadExistingMd">Load Existing Markdown File</button>
+        <button id="selectRootFolder">
+          Generate and Download Markdown from Root Folder
+        </button>
+      </div>
+    </div>
+
+    <input type="file" id="fileInput" multiple style="display: none" />
+
+    <div id="fullImageModal" class="full-image-modal">
+      <div class="full-image-content">
+        <span class="close-full-image">&times;</span>
+        <img id="fullImage" src="" alt="Full size image" />
+        <div class="image-details">
+          <h2 id="fullImageTitle"></h2>
+          <p id="fullImageDate"></p>
+          <p id="fullImageDescription"></p>
+          <p id="fullImageTags"></p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let screenshots = [];
+      const filesToShare = new Map(); // Use a Map to store both filename and File object
+      let selectedFiles = null;
+      let currentMarkdownFile = null;
+      let screenshotsHtmlFile = null;
+      let isMarkdownMode = false;
+      let markdownBasePath = "";
+
+      const placeholderImageData =
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
+      let userHasMadeSelection = false;
+
+      function parseMarkdown(markdown) {
+        const lines = markdown.split("\n");
+        const screenshots = [];
+        let currentScreenshot = {};
+
+        for (let line of lines) {
+          if (line.startsWith("# ")) {
+            if (Object.keys(currentScreenshot).length > 0) {
+              screenshots.push(currentScreenshot);
+            }
+            currentScreenshot = { title: line.substring(2).trim() };
+          } else if (line.startsWith("**Date:**")) {
+            // Remove any remaining asterisks after the field name
+            currentScreenshot.date = line
+              .substring(8)
+              .replace(/\*+/g, "") // Remove any remaining asterisks
+              .trim();
+          } else if (line.startsWith("**Description:**")) {
+            currentScreenshot.description = line
+              .substring(15)
+              .replace(/\*+/g, "") // Remove any remaining asterisks
+              .trim();
+          } else if (line.startsWith("**Tags:**")) {
+            currentScreenshot.tags = line
+              .substring(8)
+              .replace(/\*+/g, "") // Remove any remaining asterisks
+              .trim()
+              .split(",")
+              .map((tag) => tag.trim());
+          } else if (line.startsWith("![")) {
+            const match = line.match(/\((.*?)\)/);
+            if (match) {
+              const path = match[1];
+              currentScreenshot.filename = path.replace(/^(Images\/)+/i, "");
+            }
+          }
+        }
+
+        if (Object.keys(currentScreenshot).length > 0) {
+          screenshots.push(currentScreenshot);
+        }
+
+        return screenshots;
+      }
+
+      function groupScreenshotsByFolder(screenshots) {
+        return screenshots.reduce((acc, screenshot) => {
+          const folder = screenshot.filename.split("/")[0];
+          if (!acc[folder]) {
+            acc[folder] = [];
+          }
+          acc[folder].push(screenshot);
+          return acc;
+        }, {});
+      }
+
+      function getFileName(path) {
+        return path.split("/").pop();
+      }
+
+      function getMonthName(monthNumber) {
+        const months = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
+        return months[monthNumber - 1] || "";
+      }
+
+      function groupScreenshotsByMonth(screenshots) {
+        return screenshots.reduce((acc, screenshot) => {
+          const date = new Date(screenshot.date);
+          const monthYear = `${date.toLocaleString("default", {
+            month: "long",
+          })} ${date.getFullYear()}`;
+          if (!acc[monthYear]) {
+            acc[monthYear] = [];
+          }
+          acc[monthYear].push(screenshot);
+          return acc;
+        }, {});
+      }
+
+      function renderScreenshots(screenshotsToRender) {
+        console.log("Current page URL:", window.location.href);
+        console.log("isMarkdownMode:", isMarkdownMode);
+        console.log("markdownBasePath:", markdownBasePath);
+
+        const container = document.getElementById("screenshotSections");
+        container.innerHTML = ""; // Clear existing content
+
+        const groupedScreenshots =
+          groupScreenshotsBySubfolder(screenshotsToRender);
+
+        for (const [subfolderPath, screenshots] of Object.entries(
+          groupedScreenshots
+        )) {
+          console.log("Rendering subfolder:", subfolderPath);
+
+          const sectionDiv = document.createElement("div");
+          sectionDiv.className = "section";
+
+          const sectionTitle = document.createElement("h2");
+          sectionTitle.className = "section-title";
+          sectionTitle.textContent = subfolderPath || "Root";
+          sectionDiv.appendChild(sectionTitle);
+
+          const grid = document.createElement("div");
+          grid.className = "grid";
+
+          screenshots.forEach((screenshot) => {
+            console.log("Processing screenshot:", screenshot);
+
+            const screenshotDiv = document.createElement("div");
+            screenshotDiv.className = "screenshot-container";
+
+            const img = document.createElement("img");
+            img.alt = screenshot.title;
+
+            let imageUrl;
+            if (isMarkdownMode) {
+              // Remove any number of "Screenshots/" prefixes and clean the path
+              imageUrl = screenshot.filename
+                .replace(/^(Images\/)+/i, "") // Remove multiple "Screenshots/" prefixes
+                .replace(/^\/+/, ""); // Remove any leading slashes
+            } else {
+              imageUrl = screenshot.file
+                ? URL.createObjectURL(screenshot.file)
+                : screenshot.filename;
+            }
+
+            console.log("Processing image URL:", imageUrl);
+
+            console.log("Attempting to load image:", imageUrl);
+
+            img.src = imageUrl;
+            img.onerror = () => {
+              console.error(`Failed to load image: ${imageUrl}`);
+              img.src = placeholderImageData;
+            };
+
+            const imgContainer = document.createElement("div");
+            imgContainer.className = "screenshot-image-container";
+            imgContainer.appendChild(img);
+
+            // Add click event listener to the image container
+            imgContainer.addEventListener("click", () =>
+              openFullImageModal(screenshot)
+            );
+
+            const filename = document.createElement("div");
+            filename.className = "filename";
+            filename.textContent = screenshot.title;
+            imgContainer.appendChild(filename);
+
+            screenshotDiv.innerHTML = `
+                        <div class="screenshot">
+                            <div class="screenshot-content">
+                                <p class="date"><strong>Date:</strong> ${screenshot.date.replaceAll(
+                                  "*",
+                                  ""
+                                )}</p>
+                                <p class="description"><strong>Description:</strong> ${screenshot.description.replace(
+                                  /\*/g,
+                                  ""
+                                )}</p>
+                                <p class="tags"><strong>Tags:</strong> ${screenshot.tags
+                                  .join(", ")
+                                  .replace(/\*/g, "")}</p>
+                            </div>
+                        </div>
+                    `;
+            screenshotDiv.querySelector(".screenshot").prepend(imgContainer);
+            grid.appendChild(screenshotDiv);
+
+            // Add share button
+            const shareButton = document.createElement("button");
+            shareButton.className = "share-button";
+            shareButton.textContent = "↗️";
+            shareButton.setAttribute("data-filename", screenshot.filename);
+            screenshotDiv
+              .querySelector(".screenshot-image-container")
+              .appendChild(shareButton);
+
+            // Add event listener directly to the button
+            shareButton.addEventListener("click", function (event) {
+              event.stopPropagation(); // Prevent event from bubbling up
+              const filename = this.getAttribute("data-filename");
+              console.log("Share button clicked for:", filename);
+              if (filesToShare.has(filename)) {
+                filesToShare.delete(filename);
+                this.textContent = "↗️";
+                console.log("Removed from share list:", filename);
+              } else {
+                filesToShare.set(filename, null); // We'll get the file later
+                this.textContent = "✓";
+                console.log("Added to share list:", filename);
+              }
+              console.log(
+                "Current files to share:",
+                Array.from(filesToShare.keys())
+              );
+              updateFileList();
+            });
+          });
+
+          sectionDiv.appendChild(grid);
+          container.appendChild(sectionDiv);
+        }
+      }
+
+      function groupScreenshotsBySubfolder(screenshots) {
+        const grouped = {};
+        screenshots.forEach((screenshot) => {
+          const pathParts = (screenshot.filename || "").split("/");
+          const subfolderPath = pathParts.slice(0, -1).join("/");
+          if (!grouped[subfolderPath]) {
+            grouped[subfolderPath] = [];
+          }
+          grouped[subfolderPath].push(screenshot);
+        });
+        return grouped;
+      }
+
+      function formatDate(dateString) {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+          return "Invalid date";
+        }
+        return date.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+      }
+
+      function searchScreenshots(query) {
+        query = query.toLowerCase();
+        return screenshots.filter(
+          (screenshot) =>
+            screenshot.filename.toLowerCase().includes(query) ||
+            screenshot.description.toLowerCase().includes(query) ||
+            screenshot.tags.some((tag) => tag.toLowerCase().includes(query))
+        );
+      }
+
+      function handleSearch() {
+        const query = document.getElementById("searchInput").value;
+        const searchResults = searchScreenshots(query);
+        renderScreenshots(searchResults);
+      }
+
+      function toggleShare(filename, button) {
+        if (filesToShare.has(filename)) {
+          filesToShare.delete(filename);
+          button.textContent = "↗️";
+        } else {
+          filesToShare.add(filename);
+          button.textContent = "✓";
+        }
+        updateFileList();
+      }
+
+      function openShareModal() {
+        console.log("Opening share modal");
+        const shareModal = document.getElementById("shareModal");
+        if (shareModal) {
+          shareModal.style.display = "block";
+          updateFileList();
+          setupZipButton();
+        } else {
+          console.error("Share modal not found in the DOM");
+        }
+      }
+
+      function setupZipButton() {
+        const generateZipBtn = document.getElementById("generateZip");
+        if (generateZipBtn) {
+          console.log("ZIP FILES button found");
+          // Remove any existing event listeners
+          generateZipBtn.removeEventListener("click", generateZip);
+          // Add the event listener
+          generateZipBtn.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            console.log("ZIP FILES button clicked");
+            generateZip();
+          });
+        } else {
+          console.error("ZIP FILES button not found in the modal");
+        }
+      }
+
+      function updateFileList() {
+        let fileList = document.getElementById("fileList");
+        if (!fileList) {
+          console.warn("File list not found, creating it");
+          fileList = document.createElement("div");
+          fileList.id = "fileList";
+          document.querySelector(".modal-content").appendChild(fileList);
+        }
+
+        fileList.innerHTML =
+          "<h3>Files to be shared:</h3>" +
+          Array.from(filesToShare.keys())
+            .map(
+              (filename) => `
+                    <div class="file-item">
+                        <span>${filename.split("/").pop()}</span>
+                        <button class="get-file-btn" onclick="getFile('${filename}')" ${
+                filesToShare.get(filename) ? "disabled" : ""
+              }>
+                            ${
+                              filesToShare.get(filename)
+                                ? "File Ready"
+                                : "GET FILE"
+                            }
+                        </button>
+                        <button class="remove-file" onclick="removeFileFromShare('${filename}')">Remove</button>
+                    </div>
+                `
+            )
+            .join("") +
+          `
+                <div class="file-item">
+                    <span>screenshots.html</span>
+                    <button id="getHtmlFileBtn" ${
+                      screenshotsHtmlFile ? "disabled" : ""
+                    }>
+                        ${
+                          screenshotsHtmlFile
+                            ? "HTML File Selected"
+                            : "GET HTML FILE"
+                        }
+                    </button>
+                </div>`;
+
+        let zipControls = document.getElementById("zipControls");
+        if (!zipControls) {
+          console.warn("ZIP controls not found, creating them");
+          zipControls = document.createElement("div");
+          zipControls.id = "zipControls";
+          document.querySelector(".modal-content").appendChild(zipControls);
+        }
+        zipControls.style.display =
+          filesToShare.size > 0 || screenshotsHtmlFile ? "block" : "none";
+
+        validateZipButton();
+
+        // Reattach event listener for GET HTML FILE button
+        const getHtmlFileBtn = document.getElementById("getHtmlFileBtn");
+        if (getHtmlFileBtn) {
+          getHtmlFileBtn.addEventListener("click", getHtmlFile);
+        }
+      }
+
+      function removeFileFromShare(filename) {
+        filesToShare.delete(filename);
+        updateFileList();
+        const shareButton = document.querySelector(
+          `.share-button[data-filename="${filename}"]`
+        );
+        if (shareButton) {
+          shareButton.textContent = "↗️";
+        }
+      }
+
+      async function getFile(filename) {
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = "image/*";
+
+        fileInput.onchange = (event) => {
+          const file = event.target.files[0];
+          if (file) {
+            filesToShare.set(filename, file);
+            updateFileList();
+          }
+        };
+
+        fileInput.click();
+      }
+
+      async function getFileContent(filename) {
+        if ("showOpenFilePicker" in window) {
+          try {
+            const [fileHandle] = await window.showOpenFilePicker({
+              multiple: false,
+              types: [
+                {
+                  description: "Images",
+                  accept: { "image/*": [".png", ".jpg", ".jpeg", ".gif"] },
+                },
+              ],
+            });
+            const file = await fileHandle.getFile();
+            return file;
+          } catch (err) {
+            console.error("Error accessing file:", err);
+            return null;
+          }
+        } else {
+          return new Promise((resolve) => {
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = "image/*";
+            input.onchange = (event) => {
+              const file = event.target.files[0];
+              resolve(file);
+            };
+            input.click();
+          });
+        }
+      }
+
+      async function generateZip() {
+        console.log("Generating ZIP file...");
+        const zip = new JSZip();
+        const rootFolder = determineRootFolder(Array.from(filesToShare.keys()));
+        const zipFileName = `${rootFolder || "images"}.zip`;
+
+        // Include screenshots.html if it's selected
+        if (screenshotsHtmlFile) {
+          const htmlContent = await screenshotsHtmlFile.text();
+          zip.file("images.html", htmlContent);
+        }
+
+        // Add image files to the zip
+        for (const [filename, file] of filesToShare) {
+          if (file) {
+            const content = await file.arrayBuffer();
+            zip.file(filename.split("/").pop(), content); // Use only the file name, not the full path
+          }
+        }
+
+        try {
+          // Generate the zip file
+          const content = await zip.generateAsync({ type: "blob" });
+
+          // Use saveAs to prompt the user to save the file
+          saveAs(content, zipFileName);
+
+          console.log("ZIP file generated and saved:", zipFileName);
+          showSuccessMessage(
+            `ZIP file "${zipFileName}" created with ${
+              filesToShare.size + (screenshotsHtmlFile ? 1 : 0)
+            } files.`
+          );
+        } catch (error) {
+          console.error("Error generating ZIP file:", error);
+          alert(
+            "An error occurred while generating the ZIP file. Please try again."
+          );
+        }
+      }
+
+      function determineRootFolder(filenames) {
+        if (filenames.length === 0) return "";
+        const parts = filenames[0].split("/");
+        let rootFolder = parts.slice(0, -1).join("/");
+        for (let i = 1; i < filenames.length; i++) {
+          while (!filenames[i].startsWith(rootFolder)) {
+            rootFolder = rootFolder.split("/").slice(0, -1).join("/");
+            if (rootFolder === "") return "";
+          }
+        }
+        return rootFolder;
+      }
+
+      function generateMarkdownContent(screenshots) {
+        return screenshots
+          .map((screenshot) => {
+            // Clean up all fields first
+            const cleanTitle = (screenshot.title || "")
+              .replace(/\*+/g, "")
+              .trim();
+            const cleanDate = (screenshot.date || "")
+              .replace(/\*+/g, "")
+              .trim();
+            const cleanDescription = (screenshot.description || "")
+              .replace(/\*+/g, "")
+              .trim();
+            const cleanTags = (screenshot.tags || [])
+              .map((tag) => tag.replace(/\*+/g, "").trim())
+              .filter((tag) => tag);
+
+            // Generate markdown without bold markers
+            return `
+# ${cleanTitle}
+
+Date: ${cleanDate}
+
+Description: ${cleanDescription}
+
+Tags: ${cleanTags.join(", ")}
+
+![${cleanTitle}](${screenshot.filename})`;
+          })
+          .join("\n\n");
+      }
+
+      function updateProgress(metadata) {
+        const progressPercent = (metadata.percent * 100).toFixed(2);
+        console.log(`Zip progress: ${progressPercent}%`);
+        // Update UI with progress information if needed
+      }
+
+      function showSuccessMessage(zipFileName, fileCount) {
+        const successMessage = document.getElementById("successMessage");
+        successMessage.textContent = `Zip file "${zipFileName}" has been created and downloaded with ${fileCount} files. You can find it in your downloads folder.`;
+        successMessage.style.display = "block";
+        setTimeout(() => {
+          successMessage.style.display = "none";
+        }, 5000);
+      }
+
+      function showErrorMessage(error) {
+        alert(
+          `An error occurred while creating the zip file: ${error.message}. Please try again or contact support if the problem persists.`
+        );
+      }
+
+      document.querySelector(".close").onclick = function () {
+        document.getElementById("shareModal").style.display = "none";
+      };
+
+      document
+        .getElementById("closeEditorBtn")
+        .addEventListener("click", function () {
+          document.getElementById("markdownEditor").style.display = "none";
+          document.body.style.overflow = ""; // Restore scrolling of the main page
+        });
+
+      document
+        .getElementById("saveMarkdownBtn")
+        .addEventListener("click", function () {
+          const content = document.getElementById("markdownContent").value;
+          // Update the screenshots array in memory
+          screenshots = parseMarkdown(content);
+          renderScreenshots(screenshots);
+
+          // Show the save confirmation modal
+          document.getElementById("saveConfirmModal").style.display = "block";
+        });
+
+      document
+        .getElementById("downloadUpdatedFile")
+        .addEventListener("click", function () {
+          const content = document.getElementById("markdownContent").value;
+          const blob = new Blob([content], { type: "text/markdown" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = currentMarkdownFile
+            ? currentMarkdownFile.name
+            : "images.md";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        });
+
+      document
+        .getElementById("finishSaveProcess")
+        .addEventListener("click", function () {
+          // Hide the save confirmation modal
+          document.getElementById("saveConfirmModal").style.display = "none";
+          // Hide the markdown editor
+          document.getElementById("markdownEditor").style.display = "none";
+          alert(
+            "Great! Your changes are now saved and the file has been updated. The page will now reflect your changes."
+          );
+        });
+
+      document
+        .getElementById("searchButton")
+        .addEventListener("click", handleSearch);
+      document
+        .getElementById("searchInput")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            handleSearch();
+          }
+        });
+
+      function showFileSelectModal() {
+        document.getElementById("fileSelectModal").style.display = "block";
+      }
+
+      function hideFileSelectModal() {
+        document.getElementById("fileSelectModal").style.display = "none";
+      }
+
+      async function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (file) {
+          currentMarkdownFile = file;
+          try {
+            const content = await file.text();
+            document.getElementById("markdownContent").value = content;
+            screenshots = parseMarkdown(content);
+            renderScreenshots(screenshots);
+            hideFileSelectModal();
+          } catch (error) {
+            console.error("Error in handleFileSelect:", error);
+            alert("Failed to read the selected file. Error: " + error.message);
+          }
+        }
+      }
+
+      document
+        .getElementById("markdownFileInput")
+        .addEventListener("change", handleExistingMarkdownSelect);
+      // document.getElementById('generateNewMarkdownBtn').addEventListener('click', initiateNewMarkdownGeneration);
+
+      function handleExistingMarkdownSelect(event) {
+        userHasMadeSelection = true;
+        isMarkdownMode = true;
+        const file = event.target.files[0];
+        if (file) {
+          console.log("Selected markdown file:", file);
+          markdownBasePath = ""; // We don't need a base path in this case
+          console.log("Calculated markdownBasePath:", markdownBasePath);
+
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const content = e.target.result;
+            console.log("Markdown content:", content);
+            screenshots = parseMarkdown(content);
+            console.log("Parsed screenshots:", screenshots);
+            renderScreenshots(screenshots);
+            closeFileSelectModal();
+          };
+          reader.readAsText(file);
+        }
+      }
+
+      function initiateNewMarkdownGeneration() {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.webkitdirectory = true;
+        input.addEventListener("change", handleRootFolderSelect);
+        input.click();
+      }
+
+      function handleRootFolderSelect(event) {
+        isMarkdownMode = false;
+        const files = event.target.files;
+        generateScreenshotsFromFolder(files).then((generatedScreenshots) => {
+          screenshots = generatedScreenshots;
+          renderScreenshots(screenshots);
+          document.getElementById("generateMarkdownPrompt").style.display =
+            "block";
+        });
+      }
+
+      function closeFileSelectModal() {
+        document.getElementById("fileSelectModal").style.display = "none";
+      }
+
+      async function generateScreenshotsFromFolder(files) {
+        const imageFiles = Array.from(files).filter(
+          (file) => file.type.startsWith("image/") && file.name !== ".DS_Store"
+        );
+
+        return Promise.all(
+          imageFiles.map(async (file) => {
+            return {
+              filename: file.webkitRelativePath,
+              title: file.name.replace(/\.[^/.]+$/, ""),
+              date: new Date(file.lastModified).toISOString().split("T")[0],
+              description: "",
+              tags: [],
+              file: file,
+            };
+          })
+        );
+      }
+
+      async function getImageMetadata(file) {
+        // Implement this function to extract metadata from image files
+        // For now, we'll return empty metadata
+        return { description: "", tags: [] };
+      }
+
+      function generateMarkdownContent(screenshots) {
+        return screenshots
+          .map(
+            (screenshot) => `
+# ${screenshot.title}
+
+**Date:** ${screenshot.date}
+
+**Description:** ${screenshot.description}
+
+**Tags:** ${screenshot.tags.join(", ")}
+
+![${screenshot.description}](${screenshot.filename})
+`
+          )
+          .join("\n\n");
+      }
+
+      function downloadMarkdownFile(content, filename) {
+        const blob = new Blob([content], { type: "text/markdown" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      // document.getElementById('generateNewMarkdownBtn').addEventListener('click', function() {
+      //     document.getElementById('fileSelectModal').style.display = 'none';
+      //     selectRootFolderForMarkdown();
+      // });
+
+      function selectRootFolderForMarkdown() {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.webkitdirectory = true;
+        input.addEventListener("change", handleRootFolderSelectForMarkdown);
+        input.click();
+      }
+
+      async function handleRootFolderSelectForMarkdown(event) {
+        userHasMadeSelection = true;
+        const files = event.target.files;
+        screenshots = await generateScreenshotsFromFolder(files);
+        renderScreenshots(screenshots);
+
+        const markdownContent = generateMarkdownContent(screenshots);
+
+        // Store the content for later use
+        window.generatedMarkdownContent = markdownContent;
+
+        document.getElementById("initialChoiceModal").style.display = "none";
+        document.getElementById("generateMarkdownPrompt").style.display =
+          "block";
+      }
+
+      document
+        .getElementById("generateMarkdownBtn")
+        .addEventListener("click", function () {
+          if (window.generatedMarkdownContent) {
+            downloadMarkdownFile(window.generatedMarkdownContent, "images.md");
+            document.getElementById("generateMarkdownPrompt").style.display =
+              "none";
+            alert(
+              "When you have downloaded the markdown file, click OK to continue."
+            );
+          } else {
+            alert("No content generated. Please select a folder first.");
+          }
+        });
+
+      // Add a new function to check and show the file select modal if needed
+      function checkAndShowFileSelectModal() {
+        if (!userHasMadeSelection) {
+          showFileSelectModal();
+        }
+      }
+
+      function showInitialChoiceModal() {
+        document.getElementById("initialChoiceModal").style.display = "block";
+      }
+
+      document.addEventListener("DOMContentLoaded", showInitialChoiceModal);
+
+      document
+        .getElementById("loadExistingMd")
+        .addEventListener("click", function () {
+          document.getElementById("initialChoiceModal").style.display = "none";
+          showFileSelectModal();
+        });
+
+      document
+        .getElementById("selectRootFolder")
+        .addEventListener("click", function () {
+          document.getElementById("initialChoiceModal").style.display = "none";
+          selectRootFolderForMarkdown();
+        });
+
+      // document.getElementById('generateAndDownloadMd').addEventListener('click', function() {
+      //     document.getElementById('initialChoiceModal').style.display = 'none';
+      //     initiateNewMarkdownGeneration();
+      // });
+
+      document
+        .getElementById("editMarkdownBtn")
+        .addEventListener("click", function () {
+          console.log("Edit Markdown button clicked");
+          console.log("Current screenshots:", screenshots);
+
+          document.getElementById("markdownEditor").style.display = "block";
+          const generatedContent = generateMarkdownContent(screenshots);
+          console.log("Generated Markdown content:", generatedContent);
+
+          document.getElementById("markdownContent").value = generatedContent;
+          console.log("Markdown content set in textarea");
+        });
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const openShareModalBtn = document.getElementById("openShareModalBtn");
+        if (openShareModalBtn) {
+          openShareModalBtn.addEventListener("click", function () {
+            console.log("Open Share Modal button clicked");
+            openShareModal();
+          });
+        } else {
+          console.error("Open Share Modal button not found in the DOM");
+        }
+
+        const getHtmlFileBtn = document.getElementById("getHtmlFileBtn");
+        if (getHtmlFileBtn) {
+          getHtmlFileBtn.addEventListener("click", getHtmlFile);
+        } else {
+          console.error("GET HTML FILE button not found in the DOM");
+        }
+      });
+
+      function openShareModal() {
+        console.log("Opening share modal");
+        const shareModal = document.getElementById("shareModal");
+        if (shareModal) {
+          shareModal.style.display = "block";
+          updateFileList();
+          setupZipButton();
+        } else {
+          console.error("Share modal not found in the DOM");
+        }
+      }
+
+      async function getHtmlFile() {
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = ".html";
+
+        fileInput.onchange = (event) => {
+          const file = event.target.files[0];
+          if (file && file.name === "images.html") {
+            screenshotsHtmlFile = file;
+            document.getElementById("getHtmlFileBtn").textContent =
+              "HTML File Selected";
+            document.getElementById("getHtmlFileBtn").disabled = true;
+            console.log("screenshots.html file selected:", file.name);
+          } else {
+            alert("Please select the 'images.html' file.");
+          }
+        };
+
+        fileInput.click();
+      }
+
+      function validateZipButton() {
+        const generateZipBtn = document.getElementById("generateZip");
+        if (generateZipBtn) {
+          const allFilesReady = Array.from(filesToShare.values()).every(
+            (file) => file !== null
+          );
+          generateZipBtn.disabled = !(
+            allFilesReady &&
+            (filesToShare.size > 0 || screenshotsHtmlFile)
+          );
+          console.log(
+            "Generate ZIP button state updated:",
+            !generateZipBtn.disabled
+          );
+        } else {
+          console.error("Generate ZIP button not found in the DOM");
+        }
+      }
+
+      function showFullImageModal(imageUrl, title, date, description, tags) {
+        const fullImageModal = document.getElementById("fullImageModal");
+        const fullImage = document.getElementById("fullImage");
+        const fullImageTitle = document.getElementById("fullImageTitle");
+        const fullImageDate = document.getElementById("fullImageDate");
+        const fullImageDescription = document.getElementById(
+          "fullImageDescription"
+        );
+        const fullImageTags = document.getElementById("fullImageTags");
+
+        fullImage.src = imageUrl;
+        fullImageTitle.textContent = title;
+        fullImageDate.textContent = `Date: ${date}`;
+        fullImageDescription.textContent = `Description: ${description}`;
+        fullImageTags.textContent = `Tags: ${tags.join(", ")}`;
+
+        fullImageModal.style.display = "block";
+      }
+
+      document.addEventListener("click", function (event) {
+        if (event.target.classList.contains("screenshot-image-container")) {
+          const imageUrl = event.target.querySelector("img").src;
+          const title = event.target.querySelector(".filename").textContent;
+          const date =
+            event.target.nextElementSibling.querySelector(".date").textContent;
+          const description =
+            event.target.nextElementSibling.querySelector(
+              ".description"
+            ).textContent;
+          const tags =
+            event.target.nextElementSibling.querySelector(".tags").textContent;
+
+          showFullImageModal(
+            imageUrl,
+            title,
+            date,
+            description,
+            tags.split(",").map((tag) => tag.trim())
+          );
+        }
+      });
+
+      document
+        .getElementById("close-full-image")
+        .addEventListener("click", function () {
+          document.getElementById("fullImageModal").style.display = "none";
+        });
+
+      function openFullImageModal(screenshot) {
+        const modal = document.getElementById("fullImageModal");
+        const fullImage = document.getElementById("fullImage");
+        const title = document.getElementById("fullImageTitle");
+        const date = document.getElementById("fullImageDate");
+        const description = document.getElementById("fullImageDescription");
+        const tags = document.getElementById("fullImageTags");
+
+        let imageUrl;
+        if (isMarkdownMode) {
+          imageUrl = screenshot.filename.replace(/^images\//, "");
+        } else {
+          imageUrl = screenshot.file
+            ? URL.createObjectURL(screenshot.file)
+            : screenshot.filename;
+        }
+
+        fullImage.src = imageUrl;
+        fullImage.alt = screenshot.title;
+        title.textContent = screenshot.title;
+        date.textContent = `Date: ${screenshot.date}`;
+        description.textContent = `Description: ${screenshot.description}`;
+        tags.textContent = `Tags: ${screenshot.tags.join(", ")}`;
+
+        modal.style.display = "block";
+
+        // Add event listener to close button
+        const closeButton = modal.querySelector(".close-full-image");
+        closeButton.addEventListener("click", closeFullImageModal);
+      }
+
+      function closeFullImageModal() {
+        const modal = document.getElementById("fullImageModal");
+        modal.style.display = "none";
+      }
+
+      // Remove the existing event listener for the close button
+      // document.querySelector('.close-full-image').removeEventListener('click', closeFullImageModal);
+
+      // Add event listener to close modal when clicking outside the image
+      window.addEventListener("click", (event) => {
+        const modal = document.getElementById("fullImageModal");
+        if (event.target === modal) {
+          closeFullImageModal();
+        }
+      });
+    </script>
+  </body>
+</html>
