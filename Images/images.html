@@ -3,1166 +3,2339 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Images</title>
+    <title>JoySpace Images - Joyganize Your Space</title>
+
+    <!-- React and ReactDOM -->
+    <script
+      crossorigin
+      src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"
+    ></script>
+
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone@7.23.8/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?v=3.4.1"></script>
+
+    <!-- Bootstrap Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+
+    <!-- External Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/2.0.3/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <style>
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-        background-color: #f0f0f0;
-      }
 
-      .section {
-        margin-bottom: 40px;
-      }
-
-      .section-title {
-        font-size: 1.5em;
-        margin-bottom: 20px;
-        border-bottom: 2px solid #333;
-        padding-bottom: 10px;
-      }
-
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(236px, 1fr));
-        gap: 16px;
-      }
-
-      .screenshot-container {
-        break-inside: avoid;
-      }
-
-      .screenshot {
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-        transition: box-shadow 0.3s ease;
-      }
-
-      .screenshot:hover {
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      }
-
-      .screenshot-image-container {
-        position: relative;
-        cursor: pointer;
-      }
-
-      .screenshot img {
-        width: 100%;
-        display: block;
-      }
-
-      .filename {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        background-color: rgba(0, 0, 0, 0.6);
-        color: white;
-        padding: 8px;
-        font-size: 14px;
-        font-weight: 700;
-        text-align: center;
-      }
-
-      .screenshot-content {
-        padding: 12px;
-      }
-
-      .description {
-        font-size: 14px;
-        color: #333;
-        margin-bottom: 8px;
-      }
-
-      .tags {
-        font-size: 12px;
-        color: #8e8e8e;
-      }
-
-      .search-container {
-        max-width: 600px;
-        margin: 20px auto;
-        text-align: center;
-      }
-
-      .search-bar {
-        display: flex;
-        border: 1px solid #dfe1e5;
-        border-radius: 24px;
-        padding: 5px;
-        margin-bottom: 20px;
-      }
-
-      .search-bar:hover {
-        box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
-        border-color: rgba(223, 225, 229, 0);
-      }
-
-      #searchInput {
-        flex-grow: 1;
-        border: none;
-        outline: none;
-        font-size: 16px;
-        padding: 10px 15px;
-        border-radius: 24px 0 0 24px;
-      }
-
-      #searchButton {
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        padding: 0 15px;
-        border-radius: 0 24px 24px 0;
-      }
-
-      #searchButton svg {
-        width: 24px;
-        height: 24px;
-        fill: #4285f4;
-      }
-
-      .action-buttons {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-      }
-
-      .action-buttons button {
-        background-color: #f8f9fa;
-        border: 1px solid #f8f9fa;
-        border-radius: 4px;
-        color: #3c4043;
-        font-family: arial, sans-serif;
-        font-size: 14px;
-        margin: 11px 4px;
-        padding: 0 16px;
-        line-height: 27px;
-        height: 36px;
-        min-width: 54px;
-        text-align: center;
-        cursor: pointer;
-        user-select: none;
-      }
-
-      .action-buttons button:hover {
-        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
-        background-color: #f8f9fa;
-        border: 1px solid #dadce0;
-        color: #202124;
-      }
-
-      .hidden {
-        display: none;
-      }
-
-      .share-button {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background-color: rgba(255, 255, 255, 0.8);
-        border: none;
-        border-radius: 50%;
-        width: 30px;
-        height: 30px;
-        cursor: pointer;
-        display: none;
-        /* Hide by default */
-        align-items: center;
-        justify-content: center;
-      }
-
-      .modal {
-        display: none;
-        position: fixed;
-        z-index: 1;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0, 0, 0, 0.4);
-      }
-
-      .modal-content {
-        background-color: #fefefe;
-        margin: 15% auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 80%;
-        max-width: 500px;
-      }
-
-      .close {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-        cursor: pointer;
-      }
-
-      #fileList {
-        margin-bottom: 15px;
-        max-height: 200px;
-        overflow-y: auto;
-      }
-
-      .file-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-      }
-
-      .get-file-btn {
-        padding: 5px 10px;
-        background-color: #4caf50;
-        color: white;
-        border: none;
-        cursor: pointer;
-        margin-right: 5px;
-      }
-
-      .get-file-btn:disabled {
-        background-color: #ddd;
-        cursor: not-allowed;
-      }
-
-      #zipControls {
-        display: none;
-        margin-top: 20px;
-      }
-
-      .remove-file {
-        cursor: pointer;
-        color: red;
-      }
-
-      #successMessage {
-        display: none;
-        background-color: #4caf50;
-        color: white;
-        text-align: center;
-        padding: 10px;
-        margin-top: 10px;
-      }
-
-      #markdownEditor {
-        display: none;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 80%;
-        height: 80%;
-        background: white;
-        z-index: 1000;
-        padding: 20px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-      }
-
-      #markdownContent {
-        width: 100%;
-        height: calc(100% - 50px);
-        margin-bottom: 10px;
-      }
-
-      #fileSelectModal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.4);
-      }
-
-      #fileSelectModal .modal-content {
-        background-color: #fefefe;
-        margin: 15% auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 50%;
-        text-align: center;
-      }
-
-      #saveConfirmModal {
-        display: none;
-        position: fixed;
-        z-index: 1001;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.4);
-      }
-
-      #saveConfirmModal .modal-content {
-        background-color: #fefefe;
-        margin: 15% auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 50%;
-        max-width: 400px;
-        text-align: center;
-      }
-
-      #confirmSaveBtn {
-        margin-top: 20px;
-        padding: 10px 20px;
-        background-color: #4caf50;
-        color: white;
-        border: none;
-        cursor: pointer;
-      }
-
-      #downloadUpdatedFile,
-      #finishSaveProcess {
-        margin-top: 20px;
-        padding: 10px 20px;
-        color: white;
-        border: none;
-        cursor: pointer;
-      }
-
-      #downloadUpdatedFile {
-        background-color: #4caf50;
-        margin-right: 10px;
-      }
-
-      #finishSaveProcess {
-        background-color: #008cba;
-      }
-
-      .full-screen-modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: #1e1e1e;
-      }
-
-      .vs-code-style {
-        background-color: #1e1e1e;
-        color: #d4d4d4;
-        min-width: 80vw;
-        font-family: "Consolas", "Courier New", monospace;
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-        border: none;
-      }
-
-      .editor-header {
-        background-color: #2d2d2d;
-        padding: 10px 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .file-name {
-        font-size: 14px;
-        color: #fff;
-      }
-
-      .editor-controls {
-        display: flex;
-        gap: 10px;
-      }
-
-      .editor-btn {
-        background-color: #0e639c;
-        color: white;
-        border: none;
-        padding: 5px 10px;
-        cursor: pointer;
-        font-size: 12px;
-      }
-
-      .editor-btn:hover {
-        background-color: #1177bb;
-      }
-
-      .editor-body {
-        display: flex;
-        flex-grow: 1;
-        overflow: hidden;
-        height: calc(100% - 40px);
-        /* Subtract the header height */
-      }
-
-      #lineNumbers {
-        padding: 20px 10px;
-        background-color: #1e1e1e;
-        color: #858585;
-        text-align: right;
-        font-size: 14px;
-        line-height: 1.5;
-        overflow-y: hidden;
-        flex-shrink: 0;
-        width: 50px;
-        /* Adjust as needed */
-      }
-
-      #markdownContent {
-        flex-grow: 1;
-        background-color: #1e1e1e;
-        color: #d4d4d4;
-        border: none;
-        padding: 20px;
-        font-size: 14px;
-        line-height: 1.5;
-        resize: none;
-        overflow-y: scroll;
-        width: calc(100% - 70px);
-        /* Subtract the line numbers width and padding */
-        height: 100%;
-        box-sizing: border-box;
-      }
-
-      #markdownContent:focus {
-        outline: none;
-      }
-
-      /* Scrollbar styles to match VS Code */
-      #markdownContent::-webkit-scrollbar {
-        width: 14px;
-      }
-
-      #markdownContent::-webkit-scrollbar-thumb {
-        background-color: #424242;
-        border-radius: 7px;
-        border: 3px solid #1e1e1e;
-      }
-
-      #markdownContent::-webkit-scrollbar-track {
-        background-color: #1e1e1e;
-      }
-
-      .screenshot-image-container:hover .share-button {
-        display: flex;
-      }
-
-      #fileSelectModal .modal-content {
-        text-align: center;
-      }
-
-      #markdownFileInput {
-        margin: 20px 0;
-      }
-
-      #generateNewMarkdownBtn {
-        background-color: #4caf50;
-        border: none;
-        color: white;
-        padding: 15px 32px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 16px;
-        margin: 20px 0;
-        cursor: pointer;
-        border-radius: 4px;
-      }
-
-      .full-image-modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0, 0, 0, 0.9);
-      }
-
-      .full-image-content {
-        margin: 5% auto;
-        padding: 20px;
-        width: 90%;
-        max-width: 1200px;
-        position: relative;
-      }
-
-      .close-full-image {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        width: 32px;
-        height: 32px;
-        background-color: rgba(255, 255, 255, 0.8);
-        border: 2px solid rgba(0, 0, 0, 0.3);
-        border-radius: 50%;
-        font-size: 24px;
-        line-height: 24px;
-        color: #333;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        transition: all 0.2s ease;
-      }
-
-      .close-full-image:hover {
-        background-color: rgba(255, 255, 255, 0.95);
-        border-color: rgba(0, 0, 0, 0.5);
-        transform: scale(1.1);
-      }
-
-      .close-full-image:active {
-        transform: scale(0.95);
-      }
-
-      #fullImage {
-        width: 100%;
-        max-height: 70vh;
-        object-fit: contain;
-      }
-
-      .image-details {
-        color: #f1f1f1;
-        padding: 20px 0;
-      }
-
-      .image-details h2 {
-        margin-top: 0;
-      }
-
-      .image-details p {
-        margin: 10px 0;
-      }
-    </style>
+    <script>
+      // Tailwind config with specific theme
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#fffbeb",
+                100: "#fef3c7",
+                200: "#fde68a",
+                300: "#fcd34d",
+                400: "#fbbf24",
+                500: "#f59e0b", // Base color from logo
+                600: "#d97706",
+                700: "#b45309",
+                800: "#92400e",
+                900: "#78350f",
+                950: "#451a03",
+              },
+              neutral: {
+                50: "#f9fafb",
+                100: "#f3f4f6",
+                200: "#e5e7eb",
+                300: "#d1d5db",
+                400: "#9ca3af",
+                500: "#6b7280",
+                600: "#4b5563",
+                700: "#374151",
+                800: "#1f2937",
+                900: "#111827",
+                950: "#030712",
+              },
+            },
+            keyframes: {
+              fadeIn: {
+                "0%": { opacity: "0", transform: "translateY(10px)" },
+                "100%": { opacity: "1", transform: "translateY(0)" },
+              },
+              slideUp: {
+                "0%": { transform: "translateY(100%)" },
+                "100%": { transform: "translateY(0)" },
+              },
+              slideUpFade: {
+                "0%": {
+                  transform: "translateY(100%)",
+                  opacity: "0",
+                },
+                "100%": {
+                  transform: "translateY(0)",
+                  opacity: "1",
+                },
+              },
+            },
+            animation: {
+              fadeIn: "fadeIn 0.5s ease-out",
+              slideUp: "slideUp 0.5s ease-out",
+              slideUpFade: "slideUpFade 0.5s ease-out",
+            },
+          },
+        },
+      };
+    </script>
   </head>
 
   <body>
-    <h1>Images</h1>
-    <div class="search-container">
-      <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="Search images..." />
-        <button id="searchButton">
-          <svg
-            focusable="false"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-          >
-            <path
-              d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
-            ></path>
-          </svg>
-        </button>
-      </div>
-      <div class="action-buttons">
-        <button id="editMarkdownBtn">Edit Markdown</button>
-        <button id="openShareModalBtn">Open Share Modal</button>
-      </div>
-    </div>
-    <div id="generateMarkdownPrompt" style="display: none">
-      <p>
-        Click the button below to download the markdown file for rendering next
-        time without re-selecting the parent folder:
-      </p>
-      <button id="generateMarkdownBtn">Download Markdown File</button>
-    </div>
-    <div id="screenshotSections"></div>
+    <div id="root"></div>
 
-    <div id="shareModal" class="modal">
-      <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Share Images</h2>
-        <p>Select the files you want to share:</p>
-        <div id="fileList"></div>
-        <div id="zipControls">
-          <button id="generateZip">ZIP FILES</button>
-        </div>
-        <div id="successMessage"></div>
-      </div>
-    </div>
+    <script type="text/babel">
+      // Import React hooks
+      const { useState, useEffect, useCallback } = React;
 
-    <div id="markdownEditor" class="full-screen-modal">
-      <div class="modal-content vs-code-style">
-        <div class="editor-header">
-          <span class="file-name">images.md</span>
-          <div class="editor-controls">
-            <button id="saveMarkdownBtn" class="editor-btn">Save</button>
-            <button id="closeEditorBtn" class="editor-btn">Close</button>
-          </div>
-        </div>
-        <div class="editor-body">
-          <div id="lineNumbers"></div>
-          <textarea id="markdownContent" spellcheck="false"></textarea>
-        </div>
-      </div>
-    </div>
+      // Utils
+      const debounce = (func, wait) => {
+        let timeout;
+        return function executedFunction(...args) {
+          const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+          };
+          clearTimeout(timeout);
+          timeout = setTimeout(later, wait);
+        };
+      };
 
-    <div id="fileSelectModal" class="modal">
-      <div class="modal-content">
-        <h2>Markdown File Selection</h2>
-        <p>Please select an existing Markdown:</p>
-        <input type="file" id="markdownFileInput" accept=".md" />
-        <!-- <p>Or</p>
-            <button id="generateNewMarkdownBtn">Generate New Markdown File</button> -->
-      </div>
-    </div>
+      // Utility function to check browser support
+      const isFileSystemAccessSupported = () => {
+        return "showDirectoryPicker" in window;
+      };
 
-    <div id="saveConfirmModal" class="modal">
-      <div class="modal-content">
-        <h2>Save Changes</h2>
-        <p>
-          Your changes have been saved in memory. To update the file on your
-          system, please follow these steps:
-        </p>
-        <ol>
-          <li>Click the "Download Updated File" button below.</li>
-          <li>
-            Locate your original <code>images.md</code> file on your system.
-          </li>
-          <li>Replace the original file with the newly downloaded file.</li>
-          <li>
-            Rename the new file to match the original filename if necessary.
-          </li>
-        </ol>
-        <button id="downloadUpdatedFile">Download Updated File</button>
-        <button id="finishSaveProcess">I've Replaced the File</button>
-      </div>
-    </div>
+      // Fallback file input handler
+      const createFallbackFileInput = () => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.multiple = true;
+        input.webkitdirectory = true; // For Chrome/Safari
+        input.directory = true; // For Firefox
+        input.accept = "image/*";
+        return input;
+      };
 
-    <div id="initialChoiceModal" class="modal">
-      <div class="modal-content">
-        <h2>Images</h2>
-        <p>Choose an option to start:</p>
-        <button id="loadExistingMd">Load Existing Markdown File</button>
-        <button id="selectRootFolder">
-          Generate and Download Markdown from Root Folder
-        </button>
-      </div>
-    </div>
+      // App Component
+      const App = () => {
+        // Global state management
+        const [screenshots, setScreenshots] = useState([]);
+        const [filesToShare, setFilesToShare] = useState(new Map());
+        const [isMarkdownMode, setIsMarkdownMode] = useState(false);
+        const [markdownBasePath, setMarkdownBasePath] = useState("");
+        const [searchQuery, setSearchQuery] = useState("");
+        const [searchInput, setSearchInput] = useState("");
+        const searchInputRef = React.useRef(null);
+        const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+        const [activeModal, setActiveModal] = useState("initial");
+        const [selectedImage, setSelectedImage] = useState(null);
 
-    <input type="file" id="fileInput" multiple style="display: none" />
+        // Add theme state
+        const [isDark, setIsDark] = useState(() => {
+          // Initialize theme from localStorage or default to false
+          return localStorage.getItem("theme") === "dark";
+        });
 
-    <div id="fullImageModal" class="full-image-modal">
-      <div class="full-image-content">
-        <span class="close-full-image">&times;</span>
-        <img id="fullImage" src="" alt="Full size image" />
-        <div class="image-details">
-          <h2 id="fullImageTitle"></h2>
-          <p id="fullImageDate"></p>
-          <p id="fullImageDescription"></p>
-          <p id="fullImageTags"></p>
-        </div>
-      </div>
-    </div>
+        // Add new state for markdown editor
+        const [isEditorOpen, setIsEditorOpen] = useState(false);
+        const [markdownContent, setMarkdownContent] = useState("");
+        const [sharedScreenshots, setSharedScreenshots] = useState(new Set());
 
-    <script>
-      let screenshots = [];
-      const filesToShare = new Map(); // Use a Map to store both filename and File object
-      let selectedFiles = null;
-      let currentMarkdownFile = null;
-      let screenshotsHtmlFile = null;
-      let isMarkdownMode = false;
-      let markdownBasePath = "";
-
-      const placeholderImageData =
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
-
-      let userHasMadeSelection = false;
-
-      function parseMarkdown(markdown) {
-        const lines = markdown.split("\n");
-        const screenshots = [];
-        let currentScreenshot = {};
-
-        for (let line of lines) {
-          if (line.startsWith("# ")) {
-            if (Object.keys(currentScreenshot).length > 0) {
-              screenshots.push(currentScreenshot);
+        const handleShareToggle = (screenshot) => {
+          setSharedScreenshots((prev) => {
+            const newSet = new Set(prev);
+            if (newSet.has(screenshot.path)) {
+              newSet.delete(screenshot.path);
+            } else {
+              newSet.add(screenshot.path);
             }
-            currentScreenshot = { title: line.substring(2).trim() };
-          } else if (line.startsWith("**Date:**")) {
-            // Remove any remaining asterisks after the field name
-            currentScreenshot.date = line
-              .substring(8)
-              .replace(/\*+/g, "") // Remove any remaining asterisks
-              .trim();
-          } else if (line.startsWith("**Description:**")) {
-            currentScreenshot.description = line
-              .substring(15)
-              .replace(/\*+/g, "") // Remove any remaining asterisks
-              .trim();
-          } else if (line.startsWith("**Tags:**")) {
-            currentScreenshot.tags = line
-              .substring(8)
-              .replace(/\*+/g, "") // Remove any remaining asterisks
-              .trim()
-              .split(",")
-              .map((tag) => tag.trim());
-          } else if (line.startsWith("![")) {
-            const match = line.match(/\((.*?)\)/);
-            if (match) {
-              const path = match[1];
-              currentScreenshot.filename = path.replace(/^(Images\/)+/i, "");
-            }
+            return newSet;
+          });
+        };
+
+        const handleOpenShareModal = () => {
+          if (sharedScreenshots.size > 0) {
+            setActiveModal("share");
+          } else {
+            window.dispatchEvent(
+              new CustomEvent("showNotification", {
+                detail: {
+                  type: "info",
+                  message:
+                    "Select images to share by clicking the share icon on each image",
+                },
+              })
+            );
           }
+        };
+
+        // Handle markdown editor
+        const handleOpenEditor = () => setIsEditorOpen(true);
+        const handleCloseEditor = () => setIsEditorOpen(false);
+        const handleSaveMarkdown = (content) => {
+          setMarkdownContent(content);
+          localStorage.setItem("imageMarkdownContent", content);
+          setIsEditorOpen(false);
+        };
+        const hasMarkdownSave =
+          localStorage.getItem("hasMarkdownSave") === false;
+
+        // Effect to handle theme changes
+        useEffect(() => {
+          // Update localStorage
+          localStorage.setItem("theme", isDark ? "dark" : "light");
+
+          // Update document class for global theme styling
+          if (isDark) {
+            document.documentElement.classList.add("dark");
+          } else {
+            document.documentElement.classList.remove("dark");
+          }
+        }, [isDark]);
+
+        useEffect(() => {
+          const handleImageView = (e) => {
+            setSelectedImage(e.detail);
+            setActiveModal("fullImage");
+          };
+
+          window.addEventListener("openImageView", handleImageView);
+          return () =>
+            window.removeEventListener("openImageView", handleImageView);
+        }, []);
+
+        // Add handler to close modals
+        const handleCloseModal = () => {
+          setActiveModal(null);
+          setSelectedImage(null);
+        };
+
+        const toggleTheme = () => {
+          setIsDark((prev) => !prev);
+        };
+
+        const handleFolderSelection = async () => {
+          console.log("Starting folder selection process...");
+          try {
+            let imageFiles = [];
+            let existingMetadata = null;
+
+            if (isFileSystemAccessSupported()) {
+              console.log("Using modern File System Access API");
+              const dirHandle = await window.showDirectoryPicker({
+                mode: "read",
+              });
+
+              console.log("Directory selected:", dirHandle.name);
+
+              // First, check for markdown file
+              try {
+                const markdownHandle = await dirHandle.getFileHandle(
+                  "images.md"
+                );
+                const markdownFile = await markdownHandle.getFile();
+                const markdownContent = await markdownFile.text();
+                existingMetadata = parseMarkdownMetadata(markdownContent);
+              } catch (err) {
+                console.log(
+                  "No existing markdown file found, proceeding with new metadata"
+                );
+              }
+
+              // Process directory recursively (existing code)
+              async function processDirectory(dirHandle, relativePath = "") {
+                for await (const entry of dirHandle.values()) {
+                  const entryPath = relativePath
+                    ? `${relativePath}/${entry.name}`
+                    : entry.name;
+
+                  if (entry.kind === "directory") {
+                    const newDirHandle = await dirHandle.getDirectoryHandle(
+                      entry.name
+                    );
+                    await processDirectory(newDirHandle, entryPath);
+                  } else if (entry.kind === "file") {
+                    if (entry.name.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+                      console.log("Processing file in directory:", entry.name);
+                      const file = await entry.getFile();
+                      console.log("File object:", {
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                      });
+                      imageFiles.push({
+                        file,
+                        path: entryPath,
+                        name: entry.name,
+                        lastModified: new Date(file.lastModified),
+                        size: file.size,
+                        type: file.type,
+                      });
+                    }
+                  }
+                }
+              }
+
+              await processDirectory(dirHandle);
+            } else {
+              // Fallback method
+              console.log("Using fallback file input method");
+              const [files, markdownFile] = await new Promise(
+                (resolve, reject) => {
+                  const input = createFallbackFileInput();
+
+                  input.onchange = async (event) => {
+                    const files = Array.from(event.target.files);
+                    const markdownFile = files.find(
+                      (file) => file.name === "images.md"
+                    );
+
+                    if (markdownFile) {
+                      const content = await markdownFile.text();
+                      existingMetadata = parseMarkdownMetadata(content);
+                    }
+
+                    const processedFiles = files
+                      .filter((file) => {
+                        const isImage = file.type.startsWith("image/");
+                        const isSystemFile =
+                          file.name.startsWith(".") ||
+                          file.name === "index.html" ||
+                          file.name === "images.html";
+                        return isImage && !isSystemFile;
+                      })
+                      .map((file) => {
+                        const fullPath = file.webkitRelativePath;
+                        const pathParts = fullPath.split("/");
+                        pathParts.shift();
+                        const relativePath = pathParts.join("/");
+
+                        return {
+                          file,
+                          path: relativePath,
+                          name: file.name,
+                          lastModified: new Date(file.lastModified),
+                          size: file.size,
+                          type: file.type,
+                        };
+                      });
+                    resolve([processedFiles, markdownFile]);
+                  };
+
+                  input.onerror = () =>
+                    reject(new Error("File selection failed"));
+                  input.click();
+                }
+              );
+
+              imageFiles = files;
+            }
+
+            if (imageFiles.length === 0) {
+              throw new Error("No images found in the selected folder");
+            }
+
+            // Sort files by date
+            imageFiles.sort((a, b) => b.lastModified - a.lastModified);
+
+            // Generate screenshots data, merging with existing metadata if available
+            const screenshots = imageFiles.map((image) => {
+              const folder = image.path.split("/")[0];
+
+              // First try exact match with existing metadata
+              const existingData = existingMetadata?.find(
+                (meta) => meta.filename === image.path
+              );
+
+              // If no exact match and it's a new file in an existing folder,
+              // try to find patterns from the same folder
+              let folderTags = [folder];
+              if (!existingData && existingMetadata) {
+                const folderPatterns = existingMetadata.filter((meta) =>
+                  meta.filename.startsWith(folder + "/")
+                );
+
+                if (folderPatterns.length > 0) {
+                  folderTags = folderPatterns.reduce(
+                    (acc, meta) => {
+                      meta.tags?.forEach((tag) => {
+                        if (!acc.includes(tag)) {
+                          acc.push(tag);
+                        }
+                      });
+                      return acc;
+                    },
+                    [folder]
+                  );
+                }
+              }
+
+              return {
+                title:
+                  existingData?.title || image.name.replace(/\.[^/.]+$/, ""),
+                filename: image.path,
+                path: image.path,
+                folder: folder,
+                date:
+                  existingData?.date ||
+                  image.lastModified.toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  }),
+                description:
+                  existingData?.description || `Screenshot from ${folder}`,
+                tags: existingData?.tags || folderTags,
+                file: image.file, // Always pass the actual file object
+              };
+            });
+
+            // Update app state
+            setScreenshots(screenshots);
+            setMarkdownBasePath(imageFiles[0].path.split("/")[0]);
+            setIsMarkdownMode(true);
+            localStorage.setItem("hasMarkdownSave", "true");
+
+            return screenshots;
+          } catch (err) {
+            console.error("Error selecting folder:", err);
+            throw err;
+          }
+        };
+
+        // Function to parse markdown metadata
+        const parseMarkdownMetadata = (markdownContent) => {
+          const sections = markdownContent.split("\n# ").filter(Boolean);
+          return sections.map((section) => {
+            const lines = section.split("\n");
+            const title = lines[0].trim();
+
+            const metadata = {
+              title,
+              date: "",
+              description: "",
+              tags: [],
+              filename: "",
+            };
+
+            // Parse the rest of the lines
+            let currentField = "";
+            lines.slice(1).forEach((line) => {
+              if (line.startsWith("Date: ")) {
+                metadata.date = line.replace("Date: ", "").trim();
+              } else if (line.startsWith("Description: ")) {
+                metadata.description = line.replace("Description: ", "").trim();
+              } else if (line.startsWith("Tags: ")) {
+                metadata.tags = line
+                  .replace("Tags: ", "")
+                  .split(",")
+                  .map((tag) => tag.trim())
+                  .filter(Boolean);
+              } else if (line.startsWith("![")) {
+                // Extract filename from markdown image syntax
+                const match = line.match(/\]\((.*?)\)/);
+                if (match) {
+                  metadata.filename = match[1];
+                }
+              }
+            });
+
+            return metadata;
+          });
+        };
+
+        const handleUpdate = (updatedScreenshot) => {
+          // Update screenshots array
+          setScreenshots((prevScreenshots) => {
+            return prevScreenshots.map((screenshot) => {
+              // Match by path since it's unique
+              if (screenshot.path === updatedScreenshot.path) {
+                // Preserve file and other essential properties while updating metadata
+                return {
+                  ...screenshot,
+                  title: updatedScreenshot.title,
+                  description: updatedScreenshot.description,
+                  date: updatedScreenshot.date,
+                  tags: updatedScreenshot.tags,
+                };
+              }
+              return screenshot;
+            });
+          });
+
+          // Update selected image to reflect changes immediately in the modal
+          setSelectedImage(updatedScreenshot);
+          setHasUnsavedChanges(true);
+          console.log(
+            "Screenshot updated successfully:",
+            updatedScreenshot.title
+          );
+        };
+
+        const handleSave = async () => {
+          try {
+            const markdown = generateMarkdown(screenshots);
+
+            if ("showSaveFilePicker" in window) {
+              try {
+                const handle = await window.showSaveFilePicker({
+                  suggestedName: "images.md",
+                  types: [
+                    {
+                      description: "Markdown File",
+                      accept: {
+                        "text/markdown": [".md"],
+                      },
+                    },
+                  ],
+                });
+
+                const writable = await handle.createWritable();
+                await writable.write(markdown);
+                await writable.close();
+
+                setHasUnsavedChanges(false);
+
+                window.dispatchEvent(
+                  new CustomEvent("showNotification", {
+                    detail: {
+                      type: "success",
+                      message: "Markdown file saved successfully!",
+                    },
+                  })
+                );
+              } catch (err) {
+                if (err.name !== "AbortError") {
+                  throw err;
+                }
+              }
+            } else {
+              // Fallback download method
+              const blob = new Blob([markdown], { type: "text/markdown" });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement("a");
+              link.href = url;
+              link.download = "images.md";
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              URL.revokeObjectURL(url);
+
+              setHasUnsavedChanges(false);
+
+              window.dispatchEvent(
+                new CustomEvent("showNotification", {
+                  detail: {
+                    type: "success",
+                    message: "Markdown file downloaded successfully!",
+                  },
+                })
+              );
+            }
+          } catch (error) {
+            console.error("Error saving file:", error);
+
+            window.dispatchEvent(
+              new CustomEvent("showNotification", {
+                detail: {
+                  type: "error",
+                  message: "Failed to save markdown file. Please try again.",
+                },
+              })
+            );
+          }
+        };
+
+        // Memoized filtered screenshots
+        const filteredScreenshots = React.useMemo(() => {
+          if (!searchQuery.trim()) return screenshots;
+
+          const query = searchQuery.toLowerCase().trim();
+
+          return screenshots.filter((screenshot) => {
+            // Search in screenshot metadata
+            const matchesMetadata = [
+              screenshot.title,
+              screenshot.description,
+              screenshot.folder,
+              ...(screenshot.tags || []),
+            ].some((field) => field?.toLowerCase().includes(query));
+
+            if (matchesMetadata) return true;
+
+            // Special case for date search (e.g., "January" or "2024")
+            const matchesDate = screenshot.date.toLowerCase().includes(query);
+
+            return matchesDate;
+          });
+        }, [screenshots, searchQuery]);
+
+        // Highlight matching text
+        const highlightText = (text, query) => {
+          if (!query.trim() || !text) return text;
+
+          const parts = text.split(new RegExp(`(${query})`, "gi"));
+          return parts.map((part, i) =>
+            part.toLowerCase() === query.toLowerCase() ? (
+              <span key={i} className="bg-primary-500/20 text-primary-500">
+                {part}
+              </span>
+            ) : (
+              part
+            )
+          );
+        };
+
+        // Memoize the debounced search function
+        const debouncedSearch = React.useMemo(
+          () =>
+            debounce((value) => {
+              setSearchQuery(value.trim());
+            }, 300),
+          []
+        );
+
+        // Handle input change without triggering search
+        const handleInputChange = (e) => {
+          const value = e.target.value;
+          setSearchInput(value);
+          debouncedSearch(value);
+        };
+
+        // Handle search submit
+        const handleSearchSubmit = (e) => {
+          e.preventDefault();
+          setSearchQuery(searchInput.trim());
+        };
+
+        // Clear both input and search
+        const clearSearch = () => {
+          setSearchInput("");
+          setSearchQuery("");
+          searchInputRef.current?.focus();
+        };
+
+        const handleDownload = async () => {
+          try {
+            // Reset shared screenshots (this will reset the badge in Header)
+            setSharedScreenshots(new Set());
+            // Close modal
+            setActiveModal(null);
+
+            // Show success notification
+            window.dispatchEvent(
+              new CustomEvent("showNotification", {
+                detail: {
+                  type: "success",
+                  message: "Screenshots package downloaded successfully!",
+                },
+              })
+            );
+          } catch (error) {
+            console.error("Download failed:", error);
+            window.dispatchEvent(
+              new CustomEvent("showNotification", {
+                detail: {
+                  type: "error",
+                  message: "Failed to download package. Please try again.",
+                },
+              })
+            );
+          }
+        };
+
+        return (
+          <div
+            className={`min-h-screen transition-colors duration-200
+            ${isDark ? "bg-neutral-900" : "bg-neutral-50"}`}
+          >
+            <Header
+              searchQuery={searchQuery}
+              searchInput={searchInput}
+              searchInputRef={searchInputRef}
+              onSearchChange={handleInputChange}
+              onSearchSubmit={handleSearchSubmit}
+              onSearchClear={clearSearch}
+              onOpenEditor={handleOpenEditor}
+              hasUnsavedChanges={hasUnsavedChanges}
+              onSave={handleSave}
+              isDark={isDark}
+              toggleTheme={toggleTheme}
+              onOpenShare={handleOpenShareModal}
+              sharedCount={sharedScreenshots.size}
+            />
+            <MainContent
+              screenshots={filteredScreenshots}
+              searchQuery={searchQuery}
+              highlightText={highlightText}
+              isDark={isDark}
+              onShareToggle={handleShareToggle}
+              sharedScreenshots={sharedScreenshots}
+            />
+            <ModalContainer
+              hasMarkdownSave={hasMarkdownSave}
+              isMarkdownMode={isMarkdownMode}
+              setIsMarkdownMode={setIsMarkdownMode}
+              onFolderSelect={handleFolderSelection}
+              isDark={isDark}
+              activeModal={activeModal}
+              setActiveModal={setActiveModal}
+              selectedImage={selectedImage}
+              onClose={handleCloseModal}
+              onUpdate={handleUpdate}
+              sharedScreenshots={sharedScreenshots}
+              onDownload={handleDownload}
+              screenshots={screenshots}
+              onClearShared={() => setSharedScreenshots(new Set())}
+            />
+            {/* Markdown Editor Modal */}
+            <MarkdownEditorModal
+              isOpen={isEditorOpen}
+              onClose={handleCloseEditor}
+              onSave={handleSaveMarkdown}
+              screenshots={screenshots}
+              markdownContent={markdownContent}
+              isDark={isDark}
+              toggleTheme={toggleTheme}
+            />
+          </div>
+        );
+      };
+
+      // Header Components
+      const Header = ({
+        searchInput,
+        searchInputRef,
+        onSearchChange,
+        onSearchSubmit,
+        onSearchClear,
+        onOpenEditor,
+        hasUnsavedChanges,
+        isDark,
+        toggleTheme,
+        onSave,
+        onOpenShare,
+        sharedCount,
+      }) => {
+        return (
+          <header
+            className={`sticky top-0 z-10 backdrop-blur border-b
+  ${
+    isDark
+      ? "bg-neutral-900/95 border-neutral-700/50"
+      : "bg-white/95 border-neutral-200"
+  }`}
+          >
+            <div className="max-w-7xl mx-auto px-6 py-3">
+              <div className="flex items-center justify-between gap-4">
+                {/* Left: Logo */}
+                <div className="w-48 flex-shrink-0">
+                  {" "}
+                  {/* Fixed width for balance */}
+                  <Logo isDark={isDark} size="large" />
+                </div>
+
+                {/* Center: Search Bar */}
+                <div className="flex-1 max-w-xl mx-auto">
+                  {" "}
+                  {/* Centered with max-width */}
+                  <div
+                    className={`flex items-center rounded-lg h-[38px] 
+          shadow-sm transition-all
+          ${
+            isDark
+              ? "bg-neutral-800 border-neutral-700 hover:border-neutral-600"
+              : "bg-white border-neutral-200 hover:border-neutral-300"
+          } 
+          border`}
+                  >
+                    <i
+                      className={`bi bi-search text-lg mx-3
+            ${isDark ? "text-neutral-500" : "text-neutral-400"}`}
+                    />
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      value={searchInput}
+                      placeholder="Search images, tags, dates..."
+                      onChange={onSearchChange}
+                      onKeyDown={(e) => e.key === "Escape" && onSearchClear()}
+                      className={`flex-1 border-none outline-none text-sm bg-transparent
+              ${
+                isDark
+                  ? "text-neutral-100 placeholder:text-neutral-500"
+                  : "text-neutral-900 placeholder:text-neutral-400"
+              }`}
+                    />
+                    {searchInput && (
+                      <button
+                        onClick={onSearchClear}
+                        className={`p-1.5 mx-1 rounded-full transition-all
+                ${
+                  isDark
+                    ? "text-neutral-500 hover:text-neutral-300 hover:bg-neutral-700"
+                    : "text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100"
+                }`}
+                      >
+                        <i className="bi bi-x-lg"></i>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right: Actions with fixed width for balance */}
+                <div className="w-48 flex justify-end items-center gap-2">
+                  {/* Conditional Buttons */}
+                  {sharedCount > 0 && (
+                    <button
+                      onClick={onOpenShare}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+              bg-primary-500 text-white hover:bg-primary-600 transition-all"
+                    >
+                      <i className="bi bi-share"></i>
+                      Share
+                      <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded-full">
+                        {sharedCount}
+                      </span>
+                    </button>
+                  )}
+                  {hasUnsavedChanges && (
+                    <button
+                      onClick={onSave}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+              ${
+                isDark
+                  ? "bg-primary-600/20 text-primary-400 hover:bg-primary-600/30"
+                  : "bg-primary-50 text-primary-700 hover:bg-primary-100"
+              }`}
+                    >
+                      <i className="bi bi-download"></i>
+                      Save
+                    </button>
+                  )}
+                  {/* Theme Toggle - Always visible */}
+                  <button
+                    onClick={toggleTheme}
+                    className={`p-1.5 rounded-lg transition-colors
+            ${
+              isDark
+                ? "text-neutral-400 hover:text-yellow-300 hover:bg-neutral-700/50"
+                : "text-neutral-600 hover:text-yellow-500 hover:bg-neutral-100"
+            }`}
+                  >
+                    <i className={`bi ${isDark ? "bi-sun" : "bi-moon"}`}></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </header>
+        );
+      };
+
+      const MarkdownEditorModal = ({
+        isOpen,
+        onClose,
+        screenshots,
+        markdownContent,
+        onSave,
+        isDark,
+        toggleTheme,
+      }) => {
+        const [showPreview, setShowPreview] = useState(false);
+        const [showCheatsheet, setShowCheatsheet] = useState(false);
+        const [editorContent, setEditorContent] = useState(
+          markdownContent || ""
+        );
+
+        const generateInitialMarkdown = (screenshot) => {
+          // Clean up all fields first
+          const cleanTitle = (screenshot.title || "")
+            .replace(/\*+/g, "")
+            .trim();
+          const cleanDate = (screenshot.date || "").replace(/\*+/g, "").trim();
+          const cleanDescription = (screenshot.description || "")
+            .replace(/\*+/g, "")
+            .trim();
+          const cleanTags = (screenshot.tags || [])
+            .map((tag) => tag.replace(/\*+/g, "").trim())
+            .filter((tag) => tag);
+
+          // Generate markdown for single screenshot
+          return `
+# ${cleanTitle}
+
+Date: ${cleanDate}
+
+Description: ${cleanDescription}
+
+Tags: ${cleanTags.join(", ")}
+
+![${cleanTitle}](${screenshot.filename})`;
+        };
+
+        // Generate initial markdown content if none provided
+        useEffect(() => {
+          if (!markdownContent && screenshots.length > 0) {
+            const contents = screenshots.map((screenshot) =>
+              generateInitialMarkdown(screenshot)
+            );
+            setEditorContent(contents);
+          }
+        }, [screenshots, markdownContent]);
+
+        const handleSave = () => {
+          onSave(editorContent);
+          onClose();
+        };
+
+        if (!isOpen) return null;
+
+        return (
+          <div
+            className={`fixed inset-0 z-40 ${
+              isDark ? "bg-neutral-900" : "bg-neutral-50"
+            }`}
+          >
+            {/* Enhanced Editor Header */}
+            <div
+              className={`h-12 border-b flex items-center justify-between px-4
+            ${
+              isDark
+                ? "border-neutral-700/50 bg-neutral-800"
+                : "border-neutral-200 bg-white"
+            }`}
+            >
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={onClose}
+                  className={`${
+                    isDark
+                      ? "text-neutral-400 hover:text-white"
+                      : "text-neutral-600 hover:text-neutral-900"
+                  } transition-colors`}
+                >
+                  <i className="bi bi-arrow-left"></i>
+                </button>
+                <span
+                  className={`text-sm ${
+                    isDark ? "text-neutral-400" : "text-neutral-600"
+                  }`}
+                >
+                  images.md
+                </span>
+              </div>
+
+              {/* Editor Controls */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowCheatsheet(!showCheatsheet)}
+                  className={`flex items-center gap-1 text-sm transition-colors
+                  ${
+                    isDark
+                      ? "text-neutral-400 hover:text-white"
+                      : "text-neutral-600 hover:text-neutral-900"
+                  }`}
+                >
+                  <i className="bi bi-question-circle"></i>
+                  Markdown Help
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="px-3 py-1.5 text-sm bg-primary-500 text-white 
+                         rounded-lg hover:bg-primary-600 transition-colors"
+                >
+                  Save Changes
+                </button>
+                <button
+                  onClick={toggleTheme}
+                  className={`p-2 rounded-lg transition-colors
+                  ${
+                    isDark
+                      ? "text-neutral-400 hover:text-yellow-300 hover:bg-neutral-700/50"
+                      : "text-neutral-600 hover:text-yellow-500 hover:bg-neutral-100"
+                  }`}
+                >
+                  <i className={`bi ${isDark ? "bi-sun" : "bi-moon"}`}></i>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex h-[calc(100vh-3rem)]">
+              {/* Main Editor Area */}
+              <div
+                className={`flex-1 ${
+                  showCheatsheet ? "w-2/3" : "w-full"
+                } transition-all overflow-auto`}
+              >
+                {editorContent?.map((content, index) => (
+                  <div key={index} className="relative">
+                    <textarea
+                      value={content}
+                      onChange={(e) =>
+                        handleContentChange(index, e.target.value)
+                      }
+                      className={`w-full font-mono text-sm p-4
+                resize-none outline-none border-none focus:ring-0 leading-6
+                ${
+                  isDark
+                    ? "bg-neutral-900 text-neutral-100"
+                    : "bg-white text-neutral-900"
+                }`}
+                      spellCheck={false}
+                      rows={12}
+                    />
+                    {index < editorContent.length - 1 && (
+                      <div
+                        className={`h-px mx-4 my-8 ${
+                          isDark ? "bg-neutral-700" : "bg-neutral-200"
+                        }`}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Cheatsheet remains the same */}
+            </div>
+          </div>
+        );
+      };
+
+      const ImageMarkdownCheatsheet = ({ isDark }) => {
+        const sections = [
+          {
+            title: "Image Organization",
+            examples: [
+              {
+                label: "Folder Structure",
+                markdown: "# Images Collection\n## 10-2024\n## 09-2024",
+                description: "Organize images by folders/months",
+              },
+              {
+                label: "Image Entry",
+                markdown:
+                  "## Screenshot Title\n- Path: 10-2024/image.png\n- Date: October 27, 2024\n- Tags: ui, design",
+                description: "Standard format for image entries",
+              },
+              {
+                label: "Image Groups",
+                markdown:
+                  "### Design Screenshots\n![UI Design](10-2024/ui.png)\n![Layout](10-2024/layout.png)",
+                description: "Group related images together",
+              },
+            ],
+          },
+          {
+            title: "Image References",
+            examples: [
+              {
+                label: "Basic Image",
+                markdown: "![Alt Text](path/to/image.png)",
+                description: "Simple image reference",
+              },
+              {
+                label: "Image with Title",
+                markdown:
+                  "![Screenshot](path/to/image.png 'UI Design - October 2024')",
+                description: "Add hover text to images",
+              },
+              {
+                label: "Linked Image",
+                markdown: "[![Thumbnail](path/to/thumb.png)](path/to/full.png)",
+                description: "Make image clickable to full version",
+              },
+            ],
+          },
+          {
+            title: "Image Metadata",
+            examples: [
+              {
+                label: "Tags",
+                markdown: "Tags: #ui #design #prototype #mobile",
+                description: "Add searchable tags to images",
+              },
+              {
+                label: "Description",
+                markdown:
+                  "> This screenshot shows the new navigation design\n> with improved mobile responsiveness",
+                description: "Add detailed descriptions using blockquotes",
+              },
+              {
+                label: "Related Links",
+                markdown:
+                  "- Design File: [Figma](https://figma.com/file/...)\n- Issue: [#123](https://github.com/...)",
+                description: "Link to related resources",
+              },
+            ],
+          },
+        ];
+
+        return (
+          <div className="markdown-cheatsheet space-y-8 text-sm">
+            {/* Quick Reference */}
+            <div
+              className={`rounded-lg p-4 ${
+                isDark ? "bg-neutral-700/20" : "bg-neutral-100"
+              }`}
+            >
+              <h4 className="text-primary-400 font-medium mb-2">Quick Tips</h4>
+              <ul
+                className={`space-y-1 ${
+                  isDark ? "text-neutral-300" : "text-neutral-600"
+                }`}
+              >
+                <li>• Group screenshots by folders</li>
+                <li>• Add descriptive titles and tags</li>
+                <li>• Include context with descriptions</li>
+              </ul>
+            </div>
+
+            {/* Main Sections */}
+            {sections.map((section) => (
+              <div key={section.title} className="space-y-4">
+                <h3
+                  className={`font-medium border-b pb-2 ${
+                    isDark
+                      ? "text-white border-neutral-700/50"
+                      : "text-neutral-800 border-neutral-200"
+                  }`}
+                >
+                  {section.title}
+                </h3>
+
+                <div className="space-y-6">
+                  {section.examples.map((example) => (
+                    <div key={example.label} className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-primary-400">
+                          {example.label}
+                        </span>
+                        <button
+                          onClick={() =>
+                            navigator.clipboard.writeText(example.markdown)
+                          }
+                          className={`text-xs px-2 py-1 rounded-md transition-colors ${
+                            isDark
+                              ? "text-neutral-500 hover:text-primary-400 hover:bg-neutral-700/30"
+                              : "text-neutral-500 hover:text-primary-500 hover:bg-neutral-100"
+                          }`}
+                        >
+                          Copy
+                        </button>
+                      </div>
+
+                      {/* Example Box */}
+                      <div
+                        className={`rounded-lg p-3 font-mono
+                        cursor-pointer transition-colors ${
+                          isDark
+                            ? "bg-neutral-800 text-neutral-300 hover:bg-neutral-800/80 border-neutral-700/50"
+                            : "bg-white text-neutral-700 hover:bg-neutral-50 border-neutral-200"
+                        } border`}
+                        onClick={() =>
+                          navigator.clipboard.writeText(example.markdown)
+                        }
+                      >
+                        {example.markdown.split("\n").map((line, i) => (
+                          <div key={i}>{line}</div>
+                        ))}
+                      </div>
+
+                      <p
+                        className={
+                          isDark ? "text-neutral-400" : "text-neutral-600"
+                        }
+                      >
+                        {example.description}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {/* Pro Tips */}
+            <div
+              className={`rounded-lg p-4 border ${
+                isDark
+                  ? "bg-primary-500/10 border-primary-500/20"
+                  : "bg-primary-50 border-primary-200"
+              }`}
+            >
+              <h4 className="text-primary-400 font-medium mb-2">Pro Tips</h4>
+              <ul
+                className={`space-y-2 ${
+                  isDark ? "text-neutral-300" : "text-neutral-600"
+                }`}
+              >
+                <li className="flex items-start gap-2">
+                  <i className="bi bi-lightbulb text-primary-400"></i>
+                  <span>Use consistent naming for better organization</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <i className="bi bi-lightbulb text-primary-400"></i>
+                  <span>Add context to make screenshots more useful later</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <i className="bi bi-lightbulb text-primary-400"></i>
+                  <span>Link related screenshots and resources together</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        );
+      };
+
+      // MainContent Components with image display
+      const MainContent = ({
+        screenshots,
+        isDark,
+        searchQuery,
+        highlightText,
+        onShareToggle,
+        sharedScreenshots,
+      }) => {
+        if (screenshots.length === 0) {
+          return (
+            <main className="max-w-7xl mx-auto px-6 py-12">
+              <div
+                className={`flex flex-col items-center justify-center min-h-[400px] 
+          ${isDark ? "text-neutral-400" : "text-neutral-500"}
+          animate-fade-in`}
+              >
+                <i className="bi bi-images text-5xl mb-4 opacity-75"></i>
+                <p className="text-lg font-medium">
+                  {searchQuery
+                    ? "No images match your search"
+                    : "No images to display"}
+                </p>
+                <p className="text-sm mt-2">
+                  {searchQuery
+                    ? `Try adjusting your search terms`
+                    : "Select a folder or load markdown to get started"}
+                </p>
+              </div>
+            </main>
+          );
         }
 
-        if (Object.keys(currentScreenshot).length > 0) {
-          screenshots.push(currentScreenshot);
-        }
-
-        return screenshots;
-      }
-
-      function groupScreenshotsByFolder(screenshots) {
-        return screenshots.reduce((acc, screenshot) => {
-          const folder = screenshot.filename.split("/")[0];
+        // Group screenshots by folder
+        const groupedScreenshots = screenshots.reduce((acc, screenshot) => {
+          const folder = screenshot.path.split("/")[0];
           if (!acc[folder]) {
             acc[folder] = [];
           }
           acc[folder].push(screenshot);
           return acc;
         }, {});
-      }
 
-      function getFileName(path) {
-        return path.split("/").pop();
-      }
+        return (
+          <main className="max-w-7xl mx-auto px-6 py-12">
+            {/* Search Results Count */}
+            {searchQuery && (
+              <div
+                className={`mb-8 ${
+                  isDark ? "text-neutral-400" : "text-neutral-600"
+                }`}
+              >
+                <p className="text-sm">
+                  Found {screenshots.length}{" "}
+                  {screenshots.length === 1 ? "image" : "images"}
+                  for "<span className="text-primary-500">{searchQuery}</span>"
+                </p>
+              </div>
+            )}
+            <div className="space-y-16">
+              {Object.entries(groupedScreenshots).map(
+                ([folder, shots], index) => (
+                  <div key={folder}>
+                    {/* Divider line between sections */}
+                    {index > 0 && (
+                      <div
+                        className={`h-px mb-16 
+                    ${isDark ? "bg-neutral-800" : "bg-neutral-200"}`}
+                      />
+                    )}
 
-      function getMonthName(monthNumber) {
-        const months = [
-          "January",
-          "February",
-          "March",
-          "April",
-          "May",
-          "June",
-          "July",
-          "August",
-          "September",
-          "October",
-          "November",
-          "December",
-        ];
-        return months[monthNumber - 1] || "";
-      }
+                    {/* Folder Header */}
+                    <div className="mb-8">
+                      <div className="flex items-center justify-between">
+                        <h2
+                          className={`text-xl font-semibold flex items-center gap-3
+                      ${isDark ? "text-neutral-100" : "text-neutral-900"}`}
+                        >
+                          <i className="bi bi-folder text-primary-500"></i>
+                          {searchQuery
+                            ? highlightText(folder, searchQuery)
+                            : folder}
+                        </h2>
+                        <span
+                          className={`text-sm font-medium px-3 py-1 rounded-full
+                      ${
+                        isDark
+                          ? "bg-neutral-800 text-neutral-400"
+                          : "bg-neutral-100 text-neutral-500"
+                      }`}
+                        >
+                          {shots.length}{" "}
+                          {shots.length === 1 ? "image" : "images"}
+                        </span>
+                      </div>
 
-      function groupScreenshotsByMonth(screenshots) {
-        return screenshots.reduce((acc, screenshot) => {
-          const date = new Date(screenshot.date);
-          const monthYear = `${date.toLocaleString("default", {
-            month: "long",
-          })} ${date.getFullYear()}`;
-          if (!acc[monthYear]) {
-            acc[monthYear] = [];
-          }
-          acc[monthYear].push(screenshot);
-          return acc;
-        }, {});
-      }
-
-      function renderScreenshots(screenshotsToRender) {
-        console.log("Current page URL:", window.location.href);
-        console.log("isMarkdownMode:", isMarkdownMode);
-        console.log("markdownBasePath:", markdownBasePath);
-
-        const container = document.getElementById("screenshotSections");
-        container.innerHTML = ""; // Clear existing content
-
-        const groupedScreenshots =
-          groupScreenshotsBySubfolder(screenshotsToRender);
-
-        for (const [subfolderPath, screenshots] of Object.entries(
-          groupedScreenshots
-        )) {
-          console.log("Rendering subfolder:", subfolderPath);
-
-          const sectionDiv = document.createElement("div");
-          sectionDiv.className = "section";
-
-          const sectionTitle = document.createElement("h2");
-          sectionTitle.className = "section-title";
-          sectionTitle.textContent = subfolderPath || "Root";
-          sectionDiv.appendChild(sectionTitle);
-
-          const grid = document.createElement("div");
-          grid.className = "grid";
-
-          screenshots.forEach((screenshot) => {
-            console.log("Processing screenshot:", screenshot);
-
-            const screenshotDiv = document.createElement("div");
-            screenshotDiv.className = "screenshot-container";
-
-            const img = document.createElement("img");
-            img.alt = screenshot.title;
-
-            let imageUrl;
-            if (isMarkdownMode) {
-              // Remove any number of "Screenshots/" prefixes and clean the path
-              imageUrl = screenshot.filename
-                .replace(/^(Images\/)+/i, "") // Remove multiple "Screenshots/" prefixes
-                .replace(/^\/+/, ""); // Remove any leading slashes
-            } else {
-              imageUrl = screenshot.file
-                ? URL.createObjectURL(screenshot.file)
-                : screenshot.filename;
-            }
-
-            console.log("Processing image URL:", imageUrl);
-
-            console.log("Attempting to load image:", imageUrl);
-
-            img.src = imageUrl;
-            img.onerror = () => {
-              console.error(`Failed to load image: ${imageUrl}`);
-              img.src = placeholderImageData;
-            };
-
-            const imgContainer = document.createElement("div");
-            imgContainer.className = "screenshot-image-container";
-            imgContainer.appendChild(img);
-
-            // Add click event listener to the image container
-            imgContainer.addEventListener("click", () =>
-              openFullImageModal(screenshot)
-            );
-
-            const filename = document.createElement("div");
-            filename.className = "filename";
-            filename.textContent = screenshot.title;
-            imgContainer.appendChild(filename);
-
-            screenshotDiv.innerHTML = `
-                        <div class="screenshot">
-                            <div class="screenshot-content">
-                                <p class="date"><strong>Date:</strong> ${screenshot.date.replaceAll(
-                                  "*",
-                                  ""
-                                )}</p>
-                                <p class="description"><strong>Description:</strong> ${screenshot.description.replace(
-                                  /\*/g,
-                                  ""
-                                )}</p>
-                                <p class="tags"><strong>Tags:</strong> ${screenshot.tags
-                                  .join(", ")
-                                  .replace(/\*/g, "")}</p>
-                            </div>
-                        </div>
-                    `;
-            screenshotDiv.querySelector(".screenshot").prepend(imgContainer);
-            grid.appendChild(screenshotDiv);
-
-            // Add share button
-            const shareButton = document.createElement("button");
-            shareButton.className = "share-button";
-            shareButton.textContent = "↗️";
-            shareButton.setAttribute("data-filename", screenshot.filename);
-            screenshotDiv
-              .querySelector(".screenshot-image-container")
-              .appendChild(shareButton);
-
-            // Add event listener directly to the button
-            shareButton.addEventListener("click", function (event) {
-              event.stopPropagation(); // Prevent event from bubbling up
-              const filename = this.getAttribute("data-filename");
-              console.log("Share button clicked for:", filename);
-              if (filesToShare.has(filename)) {
-                filesToShare.delete(filename);
-                this.textContent = "↗️";
-                console.log("Removed from share list:", filename);
-              } else {
-                filesToShare.set(filename, null); // We'll get the file later
-                this.textContent = "✓";
-                console.log("Added to share list:", filename);
-              }
-              console.log(
-                "Current files to share:",
-                Array.from(filesToShare.keys())
-              );
-              updateFileList();
-            });
-          });
-
-          sectionDiv.appendChild(grid);
-          container.appendChild(sectionDiv);
-        }
-      }
-
-      function groupScreenshotsBySubfolder(screenshots) {
-        const grouped = {};
-        screenshots.forEach((screenshot) => {
-          const pathParts = (screenshot.filename || "").split("/");
-          const subfolderPath = pathParts.slice(0, -1).join("/");
-          if (!grouped[subfolderPath]) {
-            grouped[subfolderPath] = [];
-          }
-          grouped[subfolderPath].push(screenshot);
-        });
-        return grouped;
-      }
-
-      function formatDate(dateString) {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) {
-          return "Invalid date";
-        }
-        return date.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
-      }
-
-      function searchScreenshots(query) {
-        query = query.toLowerCase();
-        return screenshots.filter(
-          (screenshot) =>
-            screenshot.filename.toLowerCase().includes(query) ||
-            screenshot.description.toLowerCase().includes(query) ||
-            screenshot.tags.some((tag) => tag.toLowerCase().includes(query))
-        );
-      }
-
-      function handleSearch() {
-        const query = document.getElementById("searchInput").value;
-        const searchResults = searchScreenshots(query);
-        renderScreenshots(searchResults);
-      }
-
-      function toggleShare(filename, button) {
-        if (filesToShare.has(filename)) {
-          filesToShare.delete(filename);
-          button.textContent = "↗️";
-        } else {
-          filesToShare.add(filename);
-          button.textContent = "✓";
-        }
-        updateFileList();
-      }
-
-      function openShareModal() {
-        console.log("Opening share modal");
-        const shareModal = document.getElementById("shareModal");
-        if (shareModal) {
-          shareModal.style.display = "block";
-          updateFileList();
-          setupZipButton();
-        } else {
-          console.error("Share modal not found in the DOM");
-        }
-      }
-
-      function setupZipButton() {
-        const generateZipBtn = document.getElementById("generateZip");
-        if (generateZipBtn) {
-          console.log("ZIP FILES button found");
-          // Remove any existing event listeners
-          generateZipBtn.removeEventListener("click", generateZip);
-          // Add the event listener
-          generateZipBtn.addEventListener("click", function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-            console.log("ZIP FILES button clicked");
-            generateZip();
-          });
-        } else {
-          console.error("ZIP FILES button not found in the modal");
-        }
-      }
-
-      function updateFileList() {
-        let fileList = document.getElementById("fileList");
-        if (!fileList) {
-          console.warn("File list not found, creating it");
-          fileList = document.createElement("div");
-          fileList.id = "fileList";
-          document.querySelector(".modal-content").appendChild(fileList);
-        }
-
-        fileList.innerHTML =
-          "<h3>Files to be shared:</h3>" +
-          Array.from(filesToShare.keys())
-            .map(
-              (filename) => `
-                    <div class="file-item">
-                        <span>${filename.split("/").pop()}</span>
-                        <button class="get-file-btn" onclick="getFile('${filename}')" ${
-                filesToShare.get(filename) ? "disabled" : ""
-              }>
-                            ${
-                              filesToShare.get(filename)
-                                ? "File Ready"
-                                : "GET FILE"
-                            }
-                        </button>
-                        <button class="remove-file" onclick="removeFileFromShare('${filename}')">Remove</button>
+                      {/* Optional: Add folder description or metadata */}
+                      <p
+                        className={`mt-2 text-sm
+                    ${isDark ? "text-neutral-500" : "text-neutral-600"}`}
+                      >
+                        Last updated{" "}
+                        {new Date(
+                          Math.max(...shots.map((s) => new Date(s.date)))
+                        ).toLocaleDateString()}
+                      </p>
                     </div>
-                `
-            )
-            .join("") +
-          `
-                <div class="file-item">
-                    <span>screenshots.html</span>
-                    <button id="getHtmlFileBtn" ${
-                      screenshotsHtmlFile ? "disabled" : ""
-                    }>
-                        ${
-                          screenshotsHtmlFile
-                            ? "HTML File Selected"
-                            : "GET HTML FILE"
-                        }
-                    </button>
-                </div>`;
 
-        let zipControls = document.getElementById("zipControls");
-        if (!zipControls) {
-          console.warn("ZIP controls not found, creating them");
-          zipControls = document.createElement("div");
-          zipControls.id = "zipControls";
-          document.querySelector(".modal-content").appendChild(zipControls);
-        }
-        zipControls.style.display =
-          filesToShare.size > 0 || screenshotsHtmlFile ? "block" : "none";
-
-        validateZipButton();
-
-        // Reattach event listener for GET HTML FILE button
-        const getHtmlFileBtn = document.getElementById("getHtmlFileBtn");
-        if (getHtmlFileBtn) {
-          getHtmlFileBtn.addEventListener("click", getHtmlFile);
-        }
-      }
-
-      function removeFileFromShare(filename) {
-        filesToShare.delete(filename);
-        updateFileList();
-        const shareButton = document.querySelector(
-          `.share-button[data-filename="${filename}"]`
+                    {/* Grid with fade-in animation */}
+                    <div className="animate-fade-in">
+                      <ScreenshotGrid
+                        screenshots={shots}
+                        isDark={isDark}
+                        searchQuery={searchQuery}
+                        highlightText={highlightText}
+                        onShareToggle={onShareToggle}
+                        sharedScreenshots={sharedScreenshots}
+                      />
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+          </main>
         );
-        if (shareButton) {
-          shareButton.textContent = "↗️";
-        }
+      };
+      const ScreenshotGrid = ({
+        screenshots,
+        isDark,
+        searchQuery,
+        highlightText,
+        onShareToggle,
+        sharedScreenshots,
+      }) => {
+        return (
+          <div
+            className={`columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6
+      ${isDark ? "space-y-6" : "space-y-6"}`}
+          >
+            {screenshots.map((screenshot, index) => (
+              <div
+                key={screenshot.path}
+                className="break-inside-avoid mb-6 animate-fade-in"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <ScreenshotCard
+                  screenshot={screenshot}
+                  isDark={isDark}
+                  searchQuery={searchQuery}
+                  highlightText={highlightText}
+                  onShareToggle={onShareToggle}
+                  isShared={sharedScreenshots.has(screenshot.path)}
+                  onImageClick={(screenshot) => {
+                    window.dispatchEvent(
+                      new CustomEvent("openImageView", {
+                        detail: screenshot,
+                      })
+                    );
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        );
+      };
+
+      const ScreenshotCard = ({
+        screenshot,
+        isDark,
+        onImageClick,
+        isShared,
+        searchQuery,
+        highlightText,
+        onShareToggle,
+      }) => {
+        const [imageUrl, setImageUrl] = useState("");
+        const [isLoading, setIsLoading] = useState(true);
+        const [error, setError] = useState(null);
+
+        // Create URL immediately when component mounts or file changes
+        const url = React.useMemo(() => {
+          if (screenshot.file) {
+            const newUrl = URL.createObjectURL(screenshot.file);
+            return newUrl;
+          }
+          return "";
+        }, [screenshot.file]);
+
+        // Cleanup URL when component unmounts or file changes
+        useEffect(() => {
+          return () => {
+            if (url) {
+              URL.revokeObjectURL(url);
+            }
+          };
+        }, [url, screenshot.path]);
+
+        const handleImageLoad = () => {
+          setIsLoading(false);
+        };
+
+        const handleImageError = () => {
+          console.error(
+            "Image failed to load for path:",
+            screenshot.path,
+            "URL:",
+            url
+          );
+          setIsLoading(false);
+          setError("Failed to load image");
+        };
+
+        return (
+          <div
+            className={`group rounded-xl border overflow-hidden 
+    hover:transform hover:-translate-y-1 hover:shadow-lg
+    transition-all duration-300 ease-in-out relative
+    ${
+      isDark
+        ? "bg-neutral-800/50 border-neutral-700/50 hover:shadow-primary-900/20 hover:border-primary-400/30"
+        : "bg-white border-neutral-200 hover:shadow-primary-200/50 hover:border-primary-300"
+    }`}
+          >
+            {/* Title overlay at the top */}
+            <div
+              className={`absolute top-0 left-0 right-0 z-10
+      ${
+        isDark
+          ? "bg-gradient-to-b from-black/75 via-black/50 to-transparent"
+          : "bg-gradient-to-b from-neutral-900/70 via-neutral-900/40 to-transparent"
       }
+      backdrop-blur-[1px]`}
+            >
+              <div className="p-2 text-center">
+                <h3
+                  className={`font-medium truncate px-2 text-sm
+          ${isDark ? "text-white/95" : "text-white"}
+          tracking-wide`}
+                  title={screenshot.title}
+                >
+                  {searchQuery
+                    ? highlightText(screenshot.title, searchQuery)
+                    : screenshot.title}
+                </h3>
+              </div>
+            </div>
 
-      async function getFile(filename) {
-        const fileInput = document.createElement("input");
-        fileInput.type = "file";
-        fileInput.accept = "image/*";
+            {/* Image Container - Removed fixed aspect ratio */}
+            <div className="relative bg-neutral-900">
+              {isLoading && (
+                <div className="absolute inset-0 flex items-center justify-center min-h-[200px]">
+                  <div className="animate-spin text-primary-500">
+                    <i className="bi bi-arrow-repeat text-2xl"></i>
+                  </div>
+                </div>
+              )}
 
-        fileInput.onchange = (event) => {
-          const file = event.target.files[0];
-          if (file) {
-            filesToShare.set(filename, file);
-            updateFileList();
+              {error ? (
+                <div
+                  className={`absolute inset-0 flex items-center justify-center min-h-[200px]
+          ${isDark ? "text-neutral-500" : "text-neutral-400"}`}
+                >
+                  <i className="bi bi-image-alt text-3xl"></i>
+                </div>
+              ) : (
+                <img
+                  src={url}
+                  alt={screenshot.title}
+                  className={`w-full transition-opacity duration-300
+            ${isLoading ? "opacity-0" : "opacity-100"}
+            ${isDark ? "bg-neutral-900" : "bg-neutral-50"}`}
+                  onLoad={handleImageLoad}
+                  onError={handleImageError}
+                />
+              )}
+
+              {/* Action buttons overlay */}
+              <div
+                className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent 
+        opacity-0 group-hover:opacity-100 transition-opacity duration-300 
+        flex items-center justify-center gap-3"
+              >
+                <button
+                  onClick={() => onImageClick(screenshot)}
+                  className="text-white bg-black/50 p-3 rounded-full 
+            hover:bg-black/75 transform hover:scale-110 transition-all duration-300"
+                >
+                  <i className="bi bi-zoom-in text-xl"></i>
+                </button>
+                <button
+                  onClick={() => onShareToggle(screenshot)}
+                  className={`p-3 rounded-full transform hover:scale-110 transition-all duration-300
+            ${
+              isShared
+                ? "bg-primary-500 text-white hover:bg-primary-600"
+                : "text-white bg-black/50 hover:bg-black/75"
+            }`}
+                >
+                  <i
+                    className={`bi ${
+                      isShared ? "bi-check-lg" : "bi-share"
+                    } text-xl`}
+                  ></i>
+                </button>
+              </div>
+
+              {/* Share indicator */}
+              {isShared && (
+                <div className="absolute top-3 right-3 z-20">
+                  <div className="p-1.5 rounded-full bg-primary-500 text-white animate-fadeIn">
+                    <i className="bi bi-check-lg text-sm"></i>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Metadata section with improved layout */}
+            <div className="px-5 py-4">
+              {/* Date and Description in a container */}
+              <div className="space-y-2 mb-3">
+                <p
+                  className={`text-sm font-medium ${
+                    isDark ? "text-neutral-300" : "text-neutral-600"
+                  }`}
+                >
+                  {searchQuery
+                    ? highlightText(screenshot.date, searchQuery)
+                    : screenshot.date}
+                </p>
+
+                {screenshot.description && (
+                  <p
+                    className={`text-sm line-clamp-2 ${
+                      isDark ? "text-neutral-400" : "text-neutral-500"
+                    }`}
+                  >
+                    {searchQuery
+                      ? highlightText(screenshot.description, searchQuery)
+                      : screenshot.description}
+                  </p>
+                )}
+              </div>
+
+              {/* Tags with improved spacing */}
+              {screenshot.tags && screenshot.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {screenshot.tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className={`text-xs px-2.5 py-1 rounded-full font-medium
+                ${
+                  isDark
+                    ? "bg-neutral-700/50 text-neutral-300"
+                    : "bg-primary-50 text-primary-700"
+                }`}
+                    >
+                      {searchQuery ? highlightText(tag, searchQuery) : tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      };
+
+      const FullImageModal = ({ screenshot, onClose, isDark, onUpdate }) => {
+        const [isEditing, setIsEditing] = useState(false);
+        const [editData, setEditData] = useState({
+          title: screenshot.title,
+          description: screenshot.description,
+          date: screenshot.date,
+          tags: screenshot.tags.join(", "),
+        });
+
+        const handleSave = () => {
+          onUpdate({
+            ...screenshot,
+            ...editData,
+            tags: editData.tags
+              .split(",")
+              .map((tag) => tag.trim())
+              .filter(Boolean),
+          });
+          setIsEditing(false);
+        };
+
+        return (
+          <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex">
+            {/* Left side - Image */}
+            <div className="flex-1 flex items-center justify-center p-8">
+              <img
+                src={
+                  screenshot.file
+                    ? URL.createObjectURL(screenshot.file)
+                    : screenshot.filename
+                }
+                alt={screenshot.title}
+                className="max-w-full max-h-[90vh] object-contain"
+              />
+            </div>
+
+            {/* Right side - Metadata */}
+            <div
+              className={`w-96 ${
+                isDark ? "bg-neutral-800" : "bg-white"
+              } h-full p-6 flex flex-col`}
+            >
+              {/* Close button */}
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 text-white/70 hover:text-white p-2 rounded-full
+            bg-black/20 hover:bg-black/40 transition-all"
+              >
+                <i className="bi bi-x-lg text-xl"></i>
+              </button>
+
+              {/* Edit toggle */}
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                className={`mb-6 flex items-center gap-2 text-sm
+            ${
+              isDark
+                ? "text-neutral-400 hover:text-white"
+                : "text-neutral-600 hover:text-black"
+            }`}
+              >
+                <i
+                  className={`bi ${isEditing ? "bi-x-circle" : "bi-pencil"}`}
+                ></i>
+                {isEditing ? "Cancel Editing" : "Edit Details"}
+              </button>
+
+              {isEditing ? (
+                /* Edit Mode */
+                <div className="space-y-4">
+                  {/* Info note about image renaming */}
+                  <div
+                    className={`p-3 rounded-lg text-sm
+    ${
+      isDark
+        ? "bg-neutral-800/50 border border-neutral-700/50 text-neutral-300"
+        : "bg-blue-50/50 border border-blue-100 text-neutral-600"
+    }`}
+                  >
+                    <div className="flex items-start gap-2">
+                      <i
+                        className={`bi bi-info-circle-fill mt-0.5
+        ${isDark ? "text-neutral-400" : "text-blue-500"}`}
+                      ></i>
+                      <p>
+                        <span className="font-medium">Note:</span> To rename an
+                        image, please use your system's rename feature locally.
+                        This ensures consistency between the image file and its
+                        metadata.
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    <label
+                      className={`text-sm ${
+                        isDark ? "text-neutral-400" : "text-neutral-600"
+                      }`}
+                    >
+                      Description
+                    </label>
+                    <textarea
+                      value={editData.description}
+                      onChange={(e) =>
+                        setEditData((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
+                      rows={3}
+                      className={`w-full mt-1 px-3 py-2 rounded-lg border ${
+                        isDark
+                          ? "bg-neutral-700 border-neutral-600 text-white"
+                          : "bg-white border-neutral-200"
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className={`text-sm ${
+                        isDark ? "text-neutral-400" : "text-neutral-600"
+                      }`}
+                    >
+                      Date
+                    </label>
+                    <input
+                      value={editData.date}
+                      onChange={(e) =>
+                        setEditData((prev) => ({
+                          ...prev,
+                          date: e.target.value,
+                        }))
+                      }
+                      className={`w-full mt-1 px-3 py-2 rounded-lg border ${
+                        isDark
+                          ? "bg-neutral-700 border-neutral-600 text-white"
+                          : "bg-white border-neutral-200"
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className={`text-sm ${
+                        isDark ? "text-neutral-400" : "text-neutral-600"
+                      }`}
+                    >
+                      Tags (comma-separated)
+                    </label>
+                    <input
+                      value={editData.tags}
+                      onChange={(e) =>
+                        setEditData((prev) => ({
+                          ...prev,
+                          tags: e.target.value,
+                        }))
+                      }
+                      className={`w-full mt-1 px-3 py-2 rounded-lg border ${
+                        isDark
+                          ? "bg-neutral-700 border-neutral-600 text-white"
+                          : "bg-white border-neutral-200"
+                      }`}
+                    />
+                  </div>
+                  <button
+                    onClick={handleSave}
+                    className="w-full py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600
+                transition-colors mt-4"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              ) : (
+                /* View Mode */
+                <div className="space-y-6">
+                  <div>
+                    <h3
+                      className={`text-xl font-medium ${
+                        isDark ? "text-white" : "text-neutral-900"
+                      }`}
+                    >
+                      {screenshot.title}
+                    </h3>
+                    <p
+                      className={`text-sm mt-1 ${
+                        isDark ? "text-neutral-400" : "text-neutral-500"
+                      }`}
+                    >
+                      {screenshot.date}
+                    </p>
+                  </div>
+                  <div>
+                    <h4
+                      className={`text-sm font-medium ${
+                        isDark ? "text-neutral-300" : "text-neutral-700"
+                      }`}
+                    >
+                      Description
+                    </h4>
+                    <p
+                      className={`mt-1 ${
+                        isDark ? "text-neutral-400" : "text-neutral-600"
+                      }`}
+                    >
+                      {screenshot.description}
+                    </p>
+                  </div>
+                  <div>
+                    <h4
+                      className={`text-sm font-medium ${
+                        isDark ? "text-neutral-300" : "text-neutral-700"
+                      }`}
+                    >
+                      Tags
+                    </h4>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {screenshot.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className={`text-xs px-2 py-1 rounded-full ${
+                            isDark
+                              ? "bg-neutral-700 text-neutral-300"
+                              : "bg-primary-50 text-primary-700"
+                          }`}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      };
+      // Complete Modal Container Structure
+      const ModalContainer = ({
+        hasMarkdownSave,
+        isMarkdownMode,
+        setIsMarkdownMode,
+        onFolderSelect,
+        isDark,
+        activeModal,
+        setActiveModal,
+        selectedImage,
+        onClose,
+        onUpdate,
+        sharedScreenshots,
+        screenshots,
+        onClearShared,
+        onDownload,
+      }) => {
+        // Close any modal
+        const handleClose = useCallback(() => {
+          setActiveModal(null);
+        }, []);
+
+        // Close modal on escape key
+        useEffect(() => {
+          const handleEscape = (e) => {
+            if (e.key === "Escape") handleClose();
+          };
+          window.addEventListener("keydown", handleEscape);
+          return () => window.removeEventListener("keydown", handleEscape);
+        }, [handleClose]);
+
+        return (
+          <>
+            {/* Initial Choice Modal */}
+            {activeModal === "initial" && (
+              <InitialChoiceModal
+                hasMarkdownSave={hasMarkdownSave}
+                onClose={handleClose}
+                setActiveModal={setActiveModal}
+                onFolderSelect={onFolderSelect}
+              />
+            )}
+
+            {/* File Select Modal */}
+            {activeModal === "file" && (
+              <div className="modal-backdrop">
+                <div className="modal-content">
+                  <h2>Select File</h2>
+                  {/* File selection content will go here */}
+                  <button onClick={handleClose}>Close</button>
+                </div>
+              </div>
+            )}
+
+            {/* Share Modal */}
+            {activeModal === "share" && (
+              <ShareModal
+                onClose={handleClose}
+                isDark={isDark}
+                sharedScreenshots={sharedScreenshots}
+                screenshots={screenshots}
+                onClearSelection={onClearShared}
+                onDownload={onDownload}
+              />
+            )}
+
+            {/* Full Image Modal */}
+            {activeModal === "fullImage" && selectedImage && (
+              <FullImageModal
+                screenshot={selectedImage}
+                onClose={onClose}
+                isDark={isDark}
+                onUpdate={onUpdate}
+              />
+            )}
+
+            {/* Markdown Editor Modal */}
+            {activeModal === "markdown" && (
+              <div className="modal-backdrop">
+                <div className="modal-content">
+                  <h2>Edit Markdown</h2>
+                  {/* Markdown editor content will go here */}
+                  <button onClick={handleClose}>Close</button>
+                </div>
+              </div>
+            )}
+          </>
+        );
+      };
+
+      //   // Base Modal Backdrop Style
+      //   const modalBackdropStyle = `
+      //   .modal-backdrop {
+      //     @apply fixed inset-0 bg-black/75 backdrop-blur-sm z-50
+      //            flex items-center justify-center animate-fadeIn;
+      //   }
+      //   .modal-content {
+      //     @apply bg-white rounded-2xl shadow-xl max-w-2xl w-full mx-4 p-6
+      //            flex flex-col gap-6 animate-slideUpFade;
+      //   }
+      // `;
+
+      const ShareModal = ({
+        onClose,
+        isDark,
+        sharedScreenshots,
+        screenshots,
+        onClearSelection,
+        onDownload,
+      }) => {
+        const [includeHtml, setIncludeHtml] = useState(false);
+        const [htmlFile, setHtmlFile] = useState(null);
+        const [isProcessing, setIsProcessing] = useState(false);
+        const fileInputRef = React.useRef(null);
+        const selectedScreenshots = Array.from(sharedScreenshots)
+          .map((path) => screenshots.find((s) => s.path === path))
+          .filter(Boolean);
+
+        const markdownFile = generateMarkdown(selectedScreenshots);
+
+        const handleHtmlSelect = async () => {
+          try {
+            if (window.showOpenFilePicker) {
+              // Modern API approach
+              const pickerOpts = {
+                types: [
+                  {
+                    description: "HTML Files",
+                    accept: {
+                      "text/html": [".html"],
+                    },
+                  },
+                ],
+                excludeAcceptAllOption: true,
+                multiple: false,
+              };
+
+              const [fileHandle] = await window.showOpenFilePicker(pickerOpts);
+              const file = await fileHandle.getFile();
+              setHtmlFile(file);
+              setIncludeHtml(true);
+            } else {
+              // Fallback to traditional file input
+              fileInputRef.current?.click();
+            }
+          } catch (err) {
+            console.error("Failed to select HTML file:", err);
+            setIncludeHtml(false);
+            setHtmlFile(null);
           }
         };
 
-        fileInput.click();
-      }
-
-      async function getFileContent(filename) {
-        if ("showOpenFilePicker" in window) {
-          try {
-            const [fileHandle] = await window.showOpenFilePicker({
-              multiple: false,
-              types: [
-                {
-                  description: "Images",
-                  accept: { "image/*": [".png", ".jpg", ".jpeg", ".gif"] },
+        const handleFileInputChange = (event) => {
+          const file = event.target.files?.[0];
+          if (file && file.type === "text/html") {
+            setHtmlFile(file);
+            setIncludeHtml(true);
+          } else {
+            setHtmlFile(null);
+            setIncludeHtml(false);
+            window.dispatchEvent(
+              new CustomEvent("showNotification", {
+                detail: {
+                  type: "error",
+                  message: "Please select a valid HTML file",
                 },
-              ],
+              })
+            );
+          }
+          // Reset file input
+          event.target.value = "";
+        };
+
+        const handleDownload = async () => {
+          try {
+            setIsProcessing(true);
+            const zip = new JSZip();
+
+            // Add images to zip
+            const imagesFolder = zip.folder("Images");
+            for (const screenshot of selectedScreenshots) {
+              const imageBlob = await fetch(
+                URL.createObjectURL(screenshot.file)
+              ).then((r) => r.blob());
+              imagesFolder.file(
+                screenshot.filename || `${screenshot.title}.png`,
+                imageBlob
+              );
+            }
+
+            // Add markdown file
+            const markdownContent = generateMarkdown(selectedScreenshots);
+            imagesFolder.file("images.md", markdownContent);
+
+            // Add HTML file if selected
+            if (includeHtml && htmlFile) {
+              const htmlContent = await htmlFile.text();
+              imagesFolder.file(htmlFile.name, htmlContent);
+            }
+
+            // Generate zip file
+            const zipBlob = await zip.generateAsync({
+              type: "blob",
+              compression: "DEFLATE",
+              compressionOptions: {
+                level: 9,
+              },
             });
-            const file = await fileHandle.getFile();
-            return file;
-          } catch (err) {
-            console.error("Error accessing file:", err);
-            return null;
+
+            // Create download link and trigger download
+            const downloadUrl = URL.createObjectURL(zipBlob);
+            const link = document.createElement("a");
+            link.href = downloadUrl;
+            link.download = `shared-images-${
+              new Date().toISOString().split("T")[0]
+            }.zip`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Cleanup
+            URL.revokeObjectURL(downloadUrl);
+
+            // Show success notification
+            window.dispatchEvent(
+              new CustomEvent("showNotification", {
+                detail: {
+                  type: "success",
+                  message: "Images package downloaded successfully!",
+                },
+              })
+            );
+            await onDownload();
+            // Close modal
+            onClose();
+          } catch (error) {
+            console.error("Failed to create zip file:", error);
+            window.dispatchEvent(
+              new CustomEvent("showNotification", {
+                detail: {
+                  type: "error",
+                  message:
+                    "Failed to create download package. Please try again.",
+                },
+              })
+            );
+          } finally {
+            setIsProcessing(false);
           }
-        } else {
-          return new Promise((resolve) => {
-            const input = document.createElement("input");
-            input.type = "file";
-            input.accept = "image/*";
-            input.onchange = (event) => {
-              const file = event.target.files[0];
-              resolve(file);
-            };
-            input.click();
-          });
-        }
-      }
+        };
+        return (
+          <div
+            className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 
+                    flex items-center justify-center animate-fadeIn"
+          >
+            <div
+              className={`relative w-full max-w-2xl mx-4 rounded-2xl shadow-xl 
+                      ${isDark ? "bg-neutral-800" : "bg-white"}
+                      overflow-hidden animate-slideUpFade`}
+            >
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".html,text/html"
+                onChange={handleFileInputChange}
+                className="hidden"
+              />
+              {/* Header */}
+              <div
+                className={`px-6 py-4 border-b
+          ${isDark ? "border-neutral-700" : "border-neutral-200"}`}
+              >
+                <div className="flex items-center justify-between">
+                  <h2
+                    className={`text-xl font-semibold
+              ${isDark ? "text-white" : "text-neutral-900"}`}
+                  >
+                    Share Images
+                  </h2>
+                  <button
+                    onClick={onClose}
+                    className={`p-2 rounded-full hover:bg-neutral-100
+                ${
+                  isDark
+                    ? "hover:bg-neutral-700 text-neutral-400"
+                    : "text-neutral-500"
+                }`}
+                  >
+                    <i className="bi bi-x-lg"></i>
+                  </button>
+                </div>
+              </div>
 
-      async function generateZip() {
-        console.log("Generating ZIP file...");
-        const zip = new JSZip();
-        const rootFolder = determineRootFolder(Array.from(filesToShare.keys()));
-        const zipFileName = `${rootFolder || "images"}.zip`;
+              {/* Content */}
+              <div className="p-6 space-y-6">
+                {/* Selected Items */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3
+                      className={`font-medium ${
+                        isDark ? "text-neutral-200" : "text-neutral-700"
+                      }`}
+                    >
+                      Selected Items ({selectedScreenshots.length})
+                    </h3>
+                    <button
+                      onClick={onClearSelection}
+                      className={`text-sm ${
+                        isDark
+                          ? "text-neutral-400 hover:text-white"
+                          : "text-neutral-500 hover:text-neutral-900"
+                      }`}
+                    >
+                      Clear Selection
+                    </button>
+                  </div>
+                  <div
+                    className={`grid grid-cols-4 gap-2 p-3 rounded-lg border
+              ${
+                isDark
+                  ? "border-neutral-700 bg-neutral-900/50"
+                  : "border-neutral-200 bg-neutral-50"
+              }`}
+                  >
+                    {selectedScreenshots.map((screenshot) => (
+                      <div
+                        key={screenshot.path}
+                        className="relative aspect-video rounded-md overflow-hidden group"
+                      >
+                        <img
+                          src={URL.createObjectURL(screenshot.file)}
+                          alt={screenshot.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div
+                          className="absolute inset-0 bg-black/60 opacity-0 
+                    group-hover:opacity-100 transition-opacity"
+                        >
+                          <div className="p-2 text-white text-xs">
+                            {screenshot.title}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-        // Include screenshots.html if it's selected
-        if (screenshotsHtmlFile) {
-          const htmlContent = await screenshotsHtmlFile.text();
-          zip.file("images.html", htmlContent);
-        }
+                {/* Options */}
+                <div className="space-y-4">
+                  <h3
+                    className={`font-medium ${
+                      isDark ? "text-neutral-200" : "text-neutral-700"
+                    }`}
+                  >
+                    Share Options
+                  </h3>
+                  {/* HTML Viewer Option */}
+                  <div className="space-y-2">
+                    <label
+                      className={`flex items-center gap-2 
+              ${isDark ? "text-neutral-300" : "text-neutral-600"}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={includeHtml}
+                        onChange={(e) => {
+                          setIncludeHtml(e.target.checked);
+                          if (e.target.checked && !htmlFile) {
+                            handleHtmlSelect();
+                          }
+                        }}
+                        className="rounded border-neutral-300 text-primary-600 
+                  focus:ring-primary-500"
+                      />
+                      Include HTML viewer
+                    </label>
 
-        // Add image files to the zip
-        for (const [filename, file] of filesToShare) {
-          if (file) {
-            const content = await file.arrayBuffer();
-            zip.file(filename.split("/").pop(), content); // Use only the file name, not the full path
+                    {/* Show selected file or select button */}
+                    {includeHtml && (
+                      <div
+                        className={`ml-6 flex items-center gap-2 text-sm
+                ${isDark ? "text-neutral-400" : "text-neutral-600"}`}
+                      >
+                        {htmlFile ? (
+                          <>
+                            <i className="bi bi-file-earmark-code text-lg"></i>
+                            <span className="truncate">{htmlFile.name}</span>
+                            <button
+                              onClick={handleHtmlSelect}
+                              className={`ml-2 px-2 py-1 rounded text-xs
+                        ${
+                          isDark
+                            ? "hover:bg-neutral-700 text-neutral-300"
+                            : "hover:bg-neutral-100 text-neutral-500"
+                        }`}
+                            >
+                              Change
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={handleHtmlSelect}
+                            className={`flex items-center gap-1 px-3 py-1.5 rounded
+                      ${
+                        isDark
+                          ? "bg-neutral-700 hover:bg-neutral-600 text-neutral-300"
+                          : "bg-neutral-100 hover:bg-neutral-200 text-neutral-700"
+                      }`}
+                          >
+                            <i className="bi bi-folder2-open"></i>
+                            Select HTML File
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div
+                className={`px-6 py-4 border-t
+          ${isDark ? "border-neutral-700" : "border-neutral-200"}
+          flex justify-end gap-3`}
+              >
+                <button
+                  onClick={onClose}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium
+              ${
+                isDark
+                  ? "text-neutral-400 hover:text-white"
+                  : "text-neutral-600 hover:text-neutral-900"
+              }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDownload}
+                  disabled={isProcessing}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium
+              bg-primary-500 text-white hover:bg-primary-600
+              disabled:opacity-50 disabled:cursor-not-allowed
+              flex items-center gap-2`}
+                >
+                  {isProcessing ? (
+                    <>
+                      <i className="bi bi-arrow-repeat animate-spin"></i>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-download"></i>
+                      Download ZIP
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      const InitialChoiceModal = ({ hasMarkdownSave, onFolderSelect }) => {
+        const [isOpen, setIsOpen] = useState(true);
+        const [isProcessing, setIsProcessing] = useState(false);
+        const [error, setError] = useState(null);
+
+        const handleLoadMarkdown = () => {
+          setIsOpen(false);
+          // TODO: Implement load markdown
+          console.log("Load markdown clicked");
+        };
+
+        const handleSelectFolder = async () => {
+          setIsProcessing(true);
+          setError(null);
+          try {
+            await onFolderSelect();
+            setIsOpen(false);
+          } catch (error) {
+            console.error("Failed to process folder:", error);
+            setError(error.message || "Failed to process folder");
+          } finally {
+            setIsProcessing(false);
           }
-        }
+        };
 
-        try {
-          // Generate the zip file
-          const content = await zip.generateAsync({ type: "blob" });
+        if (!isOpen) return null;
 
-          // Use saveAs to prompt the user to save the file
-          saveAs(content, zipFileName);
+        return (
+          <div
+            className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 
+                      flex items-center justify-center animate-fadeIn"
+          >
+            <div
+              className="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 p-6 
+                        flex flex-col gap-6 animate-slideUpFade"
+            >
+              <h2 className="text-xl font-semibold text-neutral-900">
+                {hasMarkdownSave
+                  ? "Select Existing Markdown"
+                  : "Select the folder containing images.html file to start"}
+              </h2>
 
-          console.log("ZIP file generated and saved:", zipFileName);
-          showSuccessMessage(
-            `ZIP file "${zipFileName}" created with ${
-              filesToShare.size + (screenshotsHtmlFile ? 1 : 0)
-            } files.`
-          );
-        } catch (error) {
-          console.error("Error generating ZIP file:", error);
-          alert(
-            "An error occurred while generating the ZIP file. Please try again."
-          );
-        }
-      }
+              {hasMarkdownSave ? (
+                <button
+                  onClick={handleLoadMarkdown}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 
+                         rounded-lg text-base font-medium bg-white border border-neutral-200
+                         hover:bg-primary-50 hover:border-primary-300 hover:text-primary-700
+                         transition-all"
+                >
+                  <i className="bi bi-file-text"></i>
+                  Load Existing Markdown
+                </button>
+              ) : (
+                <button
+                  onClick={handleSelectFolder}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3
+                         rounded-lg text-base font-medium bg-white border border-neutral-200
+                         hover:bg-primary-50 hover:border-primary-300 hover:text-primary-700
+                         transition-all"
+                >
+                  <i className="bi bi-folder2-open"></i>
+                  Select Collection Folder
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      };
 
-      function determineRootFolder(filenames) {
-        if (filenames.length === 0) return "";
-        const parts = filenames[0].split("/");
-        let rootFolder = parts.slice(0, -1).join("/");
-        for (let i = 1; i < filenames.length; i++) {
-          while (!filenames[i].startsWith(rootFolder)) {
-            rootFolder = rootFolder.split("/").slice(0, -1).join("/");
-            if (rootFolder === "") return "";
-          }
-        }
-        return rootFolder;
-      }
-
-      function generateMarkdownContent(screenshots) {
+      function generateMarkdown(screenshots) {
         return screenshots
           .map((screenshot) => {
             // Clean up all fields first
@@ -1194,475 +2367,90 @@ Tags: ${cleanTags.join(", ")}
           .join("\n\n");
       }
 
-      function updateProgress(metadata) {
-        const progressPercent = (metadata.percent * 100).toFixed(2);
-        console.log(`Zip progress: ${progressPercent}%`);
-        // Update UI with progress information if needed
-      }
+      function Logo({ size = "small", isDark }) {
+        return (
+          <div className="flex items-center">
+            <span className="text-2xl font-bold relative animate-fadeIn">
+              {/* Logo text with gradient */}
+              <span
+                className={`bg-clip-text text-transparent
+              ${
+                isDark
+                  ? "bg-gradient-to-r from-neutral-100 to-neutral-300"
+                  : "bg-gradient-to-r from-neutral-900 to-neutral-700"
+              }`}
+              >
+                {/* Wand container with J */}
+                <span className="relative mx-[2px] inline-flex items-center">
+                  <span className="relative text-3xl animate-fadeIn">
+                    <span className="relative">
+                      {/* Golden J letter */}
+                      <span
+                        className={`absolute -left-3 -top-[1.55rem] text-2xl font-bold
+                        ${isDark ? "text-yellow-400" : "text-amber-500"}
+                        drop-shadow-[0_0_1px_rgba(180,83,9,0.5)]`}
+                        style={{
+                          textShadow: "0 0 1px rgba(180, 83, 9, 0.2)",
+                          WebkitFontSmoothing: "antialiased",
+                          MozOsxFontSmoothing: "grayscale",
+                        }}
+                      >
+                        J
+                      </span>
 
-      function showSuccessMessage(zipFileName, fileCount) {
-        const successMessage = document.getElementById("successMessage");
-        successMessage.textContent = `Zip file "${zipFileName}" has been created and downloaded with ${fileCount} files. You can find it in your downloads folder.`;
-        successMessage.style.display = "block";
-        setTimeout(() => {
-          successMessage.style.display = "none";
-        }, 5000);
-      }
+                      {/* Sparkle dots overlaying the J */}
+                      <div className="absolute -top-8 -left-3.5">
+                        <svg
+                          viewBox="0 0 12 12"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-6 h-6"
+                        >
+                          {[
+                            { cx: 8, cy: 4 }, // top right
+                            { cx: 4, cy: 4 }, // middle left
+                            { cx: 6, cy: 2 }, // top
+                            { cx: 6, cy: 6 }, // bottom
+                            { cx: 9, cy: 6 }, // bottom right
+                            { cx: 3, cy: 6 }, // bottom left
+                            { cx: 7, cy: 3 }, // upper curve
+                            { cx: 5, cy: 7 }, // lower curve
+                          ].map((dot, i) => (
+                            <circle
+                              key={`sparkle-${i}`}
+                              cx={dot.cx}
+                              cy={dot.cy}
+                              r="0.4"
+                              className={`
+                              ${isDark ? "fill-yellow-400" : "fill-amber-600"}
+                              animate-sparkle
+                            `}
+                              style={{
+                                animationDelay: `${i * 200}ms`,
+                              }}
+                            />
+                          ))}
+                        </svg>
+                      </div>
+                    </span>
+                  </span>
+                </span>
 
-      function showErrorMessage(error) {
-        alert(
-          `An error occurred while creating the zip file: ${error.message}. Please try again or contact support if the problem persists.`
+                <span
+                  className="animate-fadeIn ml-3 2xl:ml-0"
+                  style={{ animationDelay: "700ms" }}
+                >
+                  <span className="hidden 2xl:inline">oySpace Images</span>
+                </span>
+              </span>
+            </span>
+          </div>
         );
       }
 
-      document.querySelector(".close").onclick = function () {
-        document.getElementById("shareModal").style.display = "none";
-      };
-
-      document
-        .getElementById("closeEditorBtn")
-        .addEventListener("click", function () {
-          document.getElementById("markdownEditor").style.display = "none";
-          document.body.style.overflow = ""; // Restore scrolling of the main page
-        });
-
-      document
-        .getElementById("saveMarkdownBtn")
-        .addEventListener("click", function () {
-          const content = document.getElementById("markdownContent").value;
-          // Update the screenshots array in memory
-          screenshots = parseMarkdown(content);
-          renderScreenshots(screenshots);
-
-          // Show the save confirmation modal
-          document.getElementById("saveConfirmModal").style.display = "block";
-        });
-
-      document
-        .getElementById("downloadUpdatedFile")
-        .addEventListener("click", function () {
-          const content = document.getElementById("markdownContent").value;
-          const blob = new Blob([content], { type: "text/markdown" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = currentMarkdownFile
-            ? currentMarkdownFile.name
-            : "images.md";
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        });
-
-      document
-        .getElementById("finishSaveProcess")
-        .addEventListener("click", function () {
-          // Hide the save confirmation modal
-          document.getElementById("saveConfirmModal").style.display = "none";
-          // Hide the markdown editor
-          document.getElementById("markdownEditor").style.display = "none";
-          alert(
-            "Great! Your changes are now saved and the file has been updated. The page will now reflect your changes."
-          );
-        });
-
-      document
-        .getElementById("searchButton")
-        .addEventListener("click", handleSearch);
-      document
-        .getElementById("searchInput")
-        .addEventListener("keypress", function (e) {
-          if (e.key === "Enter") {
-            handleSearch();
-          }
-        });
-
-      function showFileSelectModal() {
-        document.getElementById("fileSelectModal").style.display = "block";
-      }
-
-      function hideFileSelectModal() {
-        document.getElementById("fileSelectModal").style.display = "none";
-      }
-
-      async function handleFileSelect(event) {
-        const file = event.target.files[0];
-        if (file) {
-          currentMarkdownFile = file;
-          try {
-            const content = await file.text();
-            document.getElementById("markdownContent").value = content;
-            screenshots = parseMarkdown(content);
-            renderScreenshots(screenshots);
-            hideFileSelectModal();
-          } catch (error) {
-            console.error("Error in handleFileSelect:", error);
-            alert("Failed to read the selected file. Error: " + error.message);
-          }
-        }
-      }
-
-      document
-        .getElementById("markdownFileInput")
-        .addEventListener("change", handleExistingMarkdownSelect);
-      // document.getElementById('generateNewMarkdownBtn').addEventListener('click', initiateNewMarkdownGeneration);
-
-      function handleExistingMarkdownSelect(event) {
-        userHasMadeSelection = true;
-        isMarkdownMode = true;
-        const file = event.target.files[0];
-        if (file) {
-          console.log("Selected markdown file:", file);
-          markdownBasePath = ""; // We don't need a base path in this case
-          console.log("Calculated markdownBasePath:", markdownBasePath);
-
-          const reader = new FileReader();
-          reader.onload = function (e) {
-            const content = e.target.result;
-            console.log("Markdown content:", content);
-            screenshots = parseMarkdown(content);
-            console.log("Parsed screenshots:", screenshots);
-            renderScreenshots(screenshots);
-            closeFileSelectModal();
-          };
-          reader.readAsText(file);
-        }
-      }
-
-      function initiateNewMarkdownGeneration() {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.webkitdirectory = true;
-        input.addEventListener("change", handleRootFolderSelect);
-        input.click();
-      }
-
-      function handleRootFolderSelect(event) {
-        isMarkdownMode = false;
-        const files = event.target.files;
-        generateScreenshotsFromFolder(files).then((generatedScreenshots) => {
-          screenshots = generatedScreenshots;
-          renderScreenshots(screenshots);
-          document.getElementById("generateMarkdownPrompt").style.display =
-            "block";
-        });
-      }
-
-      function closeFileSelectModal() {
-        document.getElementById("fileSelectModal").style.display = "none";
-      }
-
-      async function generateScreenshotsFromFolder(files) {
-        const imageFiles = Array.from(files).filter(
-          (file) => file.type.startsWith("image/") && file.name !== ".DS_Store"
-        );
-
-        return Promise.all(
-          imageFiles.map(async (file) => {
-            return {
-              filename: file.webkitRelativePath,
-              title: file.name.replace(/\.[^/.]+$/, ""),
-              date: new Date(file.lastModified).toISOString().split("T")[0],
-              description: "",
-              tags: [],
-              file: file,
-            };
-          })
-        );
-      }
-
-      async function getImageMetadata(file) {
-        // Implement this function to extract metadata from image files
-        // For now, we'll return empty metadata
-        return { description: "", tags: [] };
-      }
-
-      function generateMarkdownContent(screenshots) {
-        return screenshots
-          .map(
-            (screenshot) => `
-# ${screenshot.title}
-
-**Date:** ${screenshot.date}
-
-**Description:** ${screenshot.description}
-
-**Tags:** ${screenshot.tags.join(", ")}
-
-![${screenshot.description}](${screenshot.filename})
-`
-          )
-          .join("\n\n");
-      }
-
-      function downloadMarkdownFile(content, filename) {
-        const blob = new Blob([content], { type: "text/markdown" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }
-
-      // document.getElementById('generateNewMarkdownBtn').addEventListener('click', function() {
-      //     document.getElementById('fileSelectModal').style.display = 'none';
-      //     selectRootFolderForMarkdown();
-      // });
-
-      function selectRootFolderForMarkdown() {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.webkitdirectory = true;
-        input.addEventListener("change", handleRootFolderSelectForMarkdown);
-        input.click();
-      }
-
-      async function handleRootFolderSelectForMarkdown(event) {
-        userHasMadeSelection = true;
-        const files = event.target.files;
-        screenshots = await generateScreenshotsFromFolder(files);
-        renderScreenshots(screenshots);
-
-        const markdownContent = generateMarkdownContent(screenshots);
-
-        // Store the content for later use
-        window.generatedMarkdownContent = markdownContent;
-
-        document.getElementById("initialChoiceModal").style.display = "none";
-        document.getElementById("generateMarkdownPrompt").style.display =
-          "block";
-      }
-
-      document
-        .getElementById("generateMarkdownBtn")
-        .addEventListener("click", function () {
-          if (window.generatedMarkdownContent) {
-            downloadMarkdownFile(window.generatedMarkdownContent, "images.md");
-            document.getElementById("generateMarkdownPrompt").style.display =
-              "none";
-            alert(
-              "When you have downloaded the markdown file, click OK to continue."
-            );
-          } else {
-            alert("No content generated. Please select a folder first.");
-          }
-        });
-
-      // Add a new function to check and show the file select modal if needed
-      function checkAndShowFileSelectModal() {
-        if (!userHasMadeSelection) {
-          showFileSelectModal();
-        }
-      }
-
-      function showInitialChoiceModal() {
-        document.getElementById("initialChoiceModal").style.display = "block";
-      }
-
-      document.addEventListener("DOMContentLoaded", showInitialChoiceModal);
-
-      document
-        .getElementById("loadExistingMd")
-        .addEventListener("click", function () {
-          document.getElementById("initialChoiceModal").style.display = "none";
-          showFileSelectModal();
-        });
-
-      document
-        .getElementById("selectRootFolder")
-        .addEventListener("click", function () {
-          document.getElementById("initialChoiceModal").style.display = "none";
-          selectRootFolderForMarkdown();
-        });
-
-      // document.getElementById('generateAndDownloadMd').addEventListener('click', function() {
-      //     document.getElementById('initialChoiceModal').style.display = 'none';
-      //     initiateNewMarkdownGeneration();
-      // });
-
-      document
-        .getElementById("editMarkdownBtn")
-        .addEventListener("click", function () {
-          console.log("Edit Markdown button clicked");
-          console.log("Current screenshots:", screenshots);
-
-          document.getElementById("markdownEditor").style.display = "block";
-          const generatedContent = generateMarkdownContent(screenshots);
-          console.log("Generated Markdown content:", generatedContent);
-
-          document.getElementById("markdownContent").value = generatedContent;
-          console.log("Markdown content set in textarea");
-        });
-
-      document.addEventListener("DOMContentLoaded", function () {
-        const openShareModalBtn = document.getElementById("openShareModalBtn");
-        if (openShareModalBtn) {
-          openShareModalBtn.addEventListener("click", function () {
-            console.log("Open Share Modal button clicked");
-            openShareModal();
-          });
-        } else {
-          console.error("Open Share Modal button not found in the DOM");
-        }
-
-        const getHtmlFileBtn = document.getElementById("getHtmlFileBtn");
-        if (getHtmlFileBtn) {
-          getHtmlFileBtn.addEventListener("click", getHtmlFile);
-        } else {
-          console.error("GET HTML FILE button not found in the DOM");
-        }
-      });
-
-      function openShareModal() {
-        console.log("Opening share modal");
-        const shareModal = document.getElementById("shareModal");
-        if (shareModal) {
-          shareModal.style.display = "block";
-          updateFileList();
-          setupZipButton();
-        } else {
-          console.error("Share modal not found in the DOM");
-        }
-      }
-
-      async function getHtmlFile() {
-        const fileInput = document.createElement("input");
-        fileInput.type = "file";
-        fileInput.accept = ".html";
-
-        fileInput.onchange = (event) => {
-          const file = event.target.files[0];
-          if (file && file.name === "images.html") {
-            screenshotsHtmlFile = file;
-            document.getElementById("getHtmlFileBtn").textContent =
-              "HTML File Selected";
-            document.getElementById("getHtmlFileBtn").disabled = true;
-            console.log("screenshots.html file selected:", file.name);
-          } else {
-            alert("Please select the 'images.html' file.");
-          }
-        };
-
-        fileInput.click();
-      }
-
-      function validateZipButton() {
-        const generateZipBtn = document.getElementById("generateZip");
-        if (generateZipBtn) {
-          const allFilesReady = Array.from(filesToShare.values()).every(
-            (file) => file !== null
-          );
-          generateZipBtn.disabled = !(
-            allFilesReady &&
-            (filesToShare.size > 0 || screenshotsHtmlFile)
-          );
-          console.log(
-            "Generate ZIP button state updated:",
-            !generateZipBtn.disabled
-          );
-        } else {
-          console.error("Generate ZIP button not found in the DOM");
-        }
-      }
-
-      function showFullImageModal(imageUrl, title, date, description, tags) {
-        const fullImageModal = document.getElementById("fullImageModal");
-        const fullImage = document.getElementById("fullImage");
-        const fullImageTitle = document.getElementById("fullImageTitle");
-        const fullImageDate = document.getElementById("fullImageDate");
-        const fullImageDescription = document.getElementById(
-          "fullImageDescription"
-        );
-        const fullImageTags = document.getElementById("fullImageTags");
-
-        fullImage.src = imageUrl;
-        fullImageTitle.textContent = title;
-        fullImageDate.textContent = `Date: ${date}`;
-        fullImageDescription.textContent = `Description: ${description}`;
-        fullImageTags.textContent = `Tags: ${tags.join(", ")}`;
-
-        fullImageModal.style.display = "block";
-      }
-
-      document.addEventListener("click", function (event) {
-        if (event.target.classList.contains("screenshot-image-container")) {
-          const imageUrl = event.target.querySelector("img").src;
-          const title = event.target.querySelector(".filename").textContent;
-          const date =
-            event.target.nextElementSibling.querySelector(".date").textContent;
-          const description =
-            event.target.nextElementSibling.querySelector(
-              ".description"
-            ).textContent;
-          const tags =
-            event.target.nextElementSibling.querySelector(".tags").textContent;
-
-          showFullImageModal(
-            imageUrl,
-            title,
-            date,
-            description,
-            tags.split(",").map((tag) => tag.trim())
-          );
-        }
-      });
-
-      document
-        .getElementById("close-full-image")
-        .addEventListener("click", function () {
-          document.getElementById("fullImageModal").style.display = "none";
-        });
-
-      function openFullImageModal(screenshot) {
-        const modal = document.getElementById("fullImageModal");
-        const fullImage = document.getElementById("fullImage");
-        const title = document.getElementById("fullImageTitle");
-        const date = document.getElementById("fullImageDate");
-        const description = document.getElementById("fullImageDescription");
-        const tags = document.getElementById("fullImageTags");
-
-        let imageUrl;
-        if (isMarkdownMode) {
-          imageUrl = screenshot.filename.replace(/^images\//, "");
-        } else {
-          imageUrl = screenshot.file
-            ? URL.createObjectURL(screenshot.file)
-            : screenshot.filename;
-        }
-
-        fullImage.src = imageUrl;
-        fullImage.alt = screenshot.title;
-        title.textContent = screenshot.title;
-        date.textContent = `Date: ${screenshot.date}`;
-        description.textContent = `Description: ${screenshot.description}`;
-        tags.textContent = `Tags: ${screenshot.tags.join(", ")}`;
-
-        modal.style.display = "block";
-
-        // Add event listener to close button
-        const closeButton = modal.querySelector(".close-full-image");
-        closeButton.addEventListener("click", closeFullImageModal);
-      }
-
-      function closeFullImageModal() {
-        const modal = document.getElementById("fullImageModal");
-        modal.style.display = "none";
-      }
-
-      // Remove the existing event listener for the close button
-      // document.querySelector('.close-full-image').removeEventListener('click', closeFullImageModal);
-
-      // Add event listener to close modal when clicking outside the image
-      window.addEventListener("click", (event) => {
-        const modal = document.getElementById("fullImageModal");
-        if (event.target === modal) {
-          closeFullImageModal();
-        }
-      });
+      // Render the App
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<App />);
     </script>
   </body>
 </html>
